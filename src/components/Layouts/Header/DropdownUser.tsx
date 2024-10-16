@@ -1,7 +1,7 @@
 "use client";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Avatar, Button, Form, Image, Input, Modal, message } from "antd";
+import { Avatar, Button, Form, Input, Modal, message } from "antd";
 import {
   EyeInvisibleOutlined,
   EyeTwoTone,
@@ -12,7 +12,6 @@ import { useDispatch } from "react-redux";
 import { logout } from "@/store/slices/adminSlice";
 import { useRouter } from "next/navigation";
 import User from "@/model/User";
-import { SocketVideoCallContext } from "@/hooks/SocketContext";
 
 const DropdownUser = ({ admin }: { admin: User }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -24,7 +23,8 @@ const DropdownUser = ({ admin }: { admin: User }) => {
 
   const [isShowModalChangePass, setIsShowModalChangePass] = useState(false);
 
-  const { socket }: any = useContext(SocketVideoCallContext);
+  // Remove this line as we no longer have SocketVideoCallContext
+  // const { socket }: any = useContext(SocketVideoCallContext);
 
   useEffect(() => {
     if (!isMounted.current) {
@@ -83,7 +83,8 @@ const DropdownUser = ({ admin }: { admin: User }) => {
     localStorage.removeItem("user");
     sessionStorage.removeItem("pendingOffer");
     dispatch(logout());
-    socket.emit("disconnected");
+    // Remove this line as we no longer have access to socket
+    // socket.emit("disconnected");
   };
 
   return (
@@ -171,7 +172,6 @@ const DropdownUser = ({ admin }: { admin: User }) => {
         okText="Xác nhận"
         cancelText="Đóng"
         title="Thay đổi mật khẩu"
-        style={{ top: 20 }}
         destroyOnClose
         centered
       >

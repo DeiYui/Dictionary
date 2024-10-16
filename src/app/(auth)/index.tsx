@@ -4,8 +4,8 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Auth - We_sign",
-  description: "Auth page for We_sign",
+  title: "Auth - Dictionary",
+  description: "Auth page for Dictionary",
   icons: {
     icon: [
       {
@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     ],
   },
 };
+
 export default function LayoutAuth({ children }: any) {
   return (
     <div className="flex h-screen overflow-hidden rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mobile:block ">
@@ -28,7 +29,7 @@ export default function LayoutAuth({ children }: any) {
         <div className="px-26 py-17.5 text-center  mobile:px-4 mobile:pb-12 mobile:pt-6">
           <Link href="/" className="mb-5.5 flex items-end justify-center">
             <Logo size={80} color={colors.primary400} />
-            <div className="mb-1 text-3xl font-bold text-blue-400 ">eSign</div>
+            <div className="mb-1 text-3xl font-bold text-blue-400 ">ictionary</div>
           </Link>
 
           <p className="space-x-1 text-xl uppercase mobile:w-full  mobile:text-sm">

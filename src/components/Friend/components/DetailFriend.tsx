@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Modal, Button, Avatar, Image, message, Spin } from "antd";
 import {
   UserOutlined,
@@ -10,7 +10,6 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import User from "@/model/User";
 import Conversations from "@/model/Conversations";
-import { SocketVideoCallContext } from "@/hooks/SocketContext";
 
 interface ProfileModalProps {
   visible: boolean;
@@ -27,9 +26,8 @@ const DetailFriend: React.FC<ProfileModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
 
-  const { selectedContact, setSelectedContact }: any = useContext(
-    SocketVideoCallContext,
-  );
+  // Remove this line as SocketVideoCallContext no longer exists
+  // const { selectedContact, setSelectedContact }: any = useContext(SocketVideoCallContext);
 
   // Thông tin user
   const { data: userInfo, isFetching } = useQuery({
@@ -155,11 +153,12 @@ const DetailFriend: React.FC<ProfileModalProps> = ({
               onClick={async () => {
                 const res =
                   await Conversations.getConversationContactId(userId);
-                setSelectedContact({
-                  conversationId: res.data.conversationId,
-                  contactId: userInfo?.userId,
-                  contactName: userInfo?.name,
-                });
+                // Remove or modify this part as setSelectedContact is no longer available
+                // setSelectedContact({
+                //   conversationId: res.data.conversationId,
+                //   contactId: userInfo?.userId,
+                //   contactName: userInfo?.name,
+                // });
                 onClose();
               }}
             >

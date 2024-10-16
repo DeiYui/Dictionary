@@ -211,12 +211,12 @@ const Friend = () => {
                       />
                     </List.Item>
                   )}
-                  locale={{ emptyText: "Không có thông tin" }}
+                  locale={{ emptyText: "Không có tin" }}
                 />
               </div>
             ))
           ) : (
-            <Empty description="Không có thông tin"></Empty>
+            <Empty description="Không có "></Empty>
           )}
         </Tabs.TabPane>
         <Tabs.TabPane
@@ -342,7 +342,7 @@ const Friend = () => {
               locale={{ emptyText: "Không có thông tin" }}
             />
           ) : (
-            <Empty description="Không có thông tin"></Empty>
+            <Empty description="Không có thông"></Empty>
           )}
         </Tabs.TabPane>
       </Tabs>

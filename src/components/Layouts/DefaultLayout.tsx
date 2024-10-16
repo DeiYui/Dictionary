@@ -7,14 +7,12 @@ import { DoubleLeftOutlined, DoubleRightOutlined } from "@ant-design/icons";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import ChatMessage from "../Chat/ChatMessage";
 
 export default function DefaultLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.admin);
 
@@ -66,9 +64,6 @@ export default function DefaultLayout({
             <div className="mx-auto mr-14 max-w-full p-4 ">{children}</div>
           </main>
         </div>
-
-        {/* Chat */}
-        {user && !pathname.includes("/chat") && <ChatMessage />}
       </div>
     </>
   );

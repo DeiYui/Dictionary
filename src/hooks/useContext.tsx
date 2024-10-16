@@ -1,4 +1,4 @@
-import CallModal from "@/components/Chat/components/CallModal";
+
 import { RootState } from "@/store";
 import { createContext, useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -465,23 +465,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
 
       {/* Modal call */}
-      <CallModal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        myVideoRef={myVideo}
-        userVideoRef={userVideo}
-        callAccepted={callAccepted}
-        callUser={callUser}
-        answerCall={answerCall}
-        call={call}
-        callEnded={callEnded}
-        leaveCall={leaveCall}
-        toggleAudio={toggleAudio}
-        isAudioMuted={isAudioMuted}
-        toggleVideo={toggleVideo}
-        isVideoOff={isVideoOff}
-        name={name}
-      />
+      
     </SocketContext.Provider>
   );
 };
