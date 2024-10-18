@@ -47,7 +47,7 @@ const Register: React.FC = () => {
 
   return (
     <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-      <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
+      <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2 text-purple-600">
         Đăng ký
       </h2>
 
@@ -183,7 +183,7 @@ const Register: React.FC = () => {
             size="large"
             type="primary"
             htmlType="submit"
-            className="w-full"
+            className="w-full bg-purple-600 hover:bg-purple-700"
           >
             Đăng ký
           </Button>
@@ -192,7 +192,7 @@ const Register: React.FC = () => {
         <Form.Item className=" text-center">
           <p>
             Quay lại{" "}
-            <Link href="/login" className="text-primary">
+            <Link href="/login" className="text-purple-600 hover:text-purple-700">
               Đăng nhập
             </Link>
           </p>

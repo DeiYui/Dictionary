@@ -45,8 +45,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <>
                 <Link
                   href={item.path}
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 text-sm font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname === item.path ? "bg-graydark dark:bg-meta-4" : ""
+                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 text-sm font-medium text-white duration-300 ease-in-out hover:bg-purple-600 dark:hover:bg-purple-800 ${
+                    pathname === item.path ? "bg-purple-600 dark:bg-purple-800" : ""
                   }`}
                   onClick={(e) => {
                     if (hasChildren) {
@@ -60,7 +60,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   {item.label}
                   {hasChildren && (
                     <svg
-                      className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${
+                      className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current text-white ${
                         open ? "rotate-180" : ""
                       }`}
                       width="20"
@@ -92,7 +92,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   return (
     <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-99 flex h-screen w-70 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
+      className={`absolute left-0 top-0 z-99 flex h-screen w-70 flex-col overflow-y-hidden bg-purple-500 duration-300 ease-linear dark:bg-purple-700 lg:static lg:translate-x-0 ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -107,7 +107,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         {/* Sidebar Menu */}
         <nav className="mt-5 py-4 pl-4 pr-2 lg:mt-9">
           <div>
-            <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
+            <h3 className="mb-4 ml-4 text-sm font-semibold text-purple-200">
               MENU
             </h3>
 
@@ -121,7 +121,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
             {admin && (admin?.role === "ADMIN" || admin?.role === "TEACHER") ? (
               <>
-                <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
+                <h3 className="mb-4 ml-4 text-xl font-bold text-white">
                   ADMIN
                 </h3>
 

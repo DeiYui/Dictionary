@@ -19,9 +19,9 @@ const Header = (props: {
   const admin = state.admin;
 
   return (
-    <header className="sticky top-0  z-[98] flex w-full bg-white  drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
+    <header className="sticky top-0 z-[98] flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
       <div
-        className={`flex flex-grow items-center justify-between  px-4  py-4  shadow-2 ${!pathname.includes("/chat") && admin ? "pr-16" : "pr-4"} `}
+        className={`flex flex-grow items-center justify-between px-4 py-4 shadow-2 ${!pathname.includes("/chat") && admin ? "pr-16" : "pr-4"} `}
       >
         {/* Hiện logo khi ẩn slideBar */}
         <div className="flex items-center gap-4">
@@ -40,8 +40,8 @@ const Header = (props: {
           {pathname?.includes("study") && sidebarOpen && <StudySelect />}
         </div>
 
-        <div className=" flex items-center gap-3">
-          <ul className=" flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <ul className="flex items-center gap-2">
             {/* <!-- Dark Mode Toggler --> */}
             {/* <DarkModeSwitcher /> */}
             {/* <!-- Dark Mode Toggler --> */}
@@ -61,10 +61,17 @@ const Header = (props: {
           ) : (
             <div className="flex gap-4">
               <Link href="/register">
-                <Button>Đăng ký</Button>
+                <Button className="border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white">
+                  Đăng ký
+                </Button>
               </Link>
               <Link href="/login">
-                <Button type="primary"> Đăng nhập</Button>
+                <Button 
+                  type="primary"
+                  className="bg-purple-500 border-purple-500 hover:bg-purple-600 hover:border-purple-600"
+                >
+                  Đăng nhập
+                </Button>
               </Link>
             </div>
           )}
