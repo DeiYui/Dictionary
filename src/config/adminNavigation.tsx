@@ -7,7 +7,7 @@ export const AdminSystem = (admin: any) => {
     ? [
         {
           key: "/learning-management",
-          label: "Quản lý học tập",
+          label: "Quản lý học liệu",
           path: "/learning-management",
           icon: <AdminIcon color="white" size={20} />,
           children: [

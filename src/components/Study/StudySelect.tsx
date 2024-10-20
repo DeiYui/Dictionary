@@ -14,6 +14,31 @@ import React from "react";
 
 const iconsData = [
   {
+    icon: <RoomIcon size={38} color={colors.green500} />,
+    tooltipText: "Theo lớp học",
+    link: "/study/room",
+  },
+  {
+    icon: <TopicIcon size={38} />,
+    tooltipText: "Chủ đề",
+    link: "/study/topics",
+  },
+  {
+    icon: <VocabularyIcon size={38} color={colors.yellow900} />,
+    tooltipText: "Từ vựng",
+    link: "/study/vocabulary",
+  },
+  {
+    icon: <SentenceIcon size={38} color={colors.green400} />,
+    tooltipText: "Câu",
+    link: "/study/sentence",
+  },
+  {
+    icon: <ParagraphIcon size={38} color={colors.black1000} />,
+    tooltipText: "Đoạn",
+    link: "/study/paragraph",
+  },
+  {
     icon: <AlphabetIcon size={38} color={colors.primary600} />,
     tooltipText: "Bảng chữ cái",
     link: "/study/alphabet",
@@ -22,31 +47,6 @@ const iconsData = [
     icon: <NumberIcon size={38} color={colors.green600} />,
     tooltipText: "Bảng chữ số",
     link: "/study/alphanumeric",
-  },
-  {
-    icon: <TopicIcon size={38} />,
-    tooltipText: "Theo chủ đề",
-    link: "/study/topics",
-  },
-  {
-    icon: <VocabularyIcon size={38} color={colors.yellow900} />,
-    tooltipText: "Theo từ vựng",
-    link: "/study/vocabulary",
-  },
-  {
-    icon: <SentenceIcon size={38} color={colors.green400} />,
-    tooltipText: "Theo câu",
-    link: "/study/sentence",
-  },
-  {
-    icon: <ParagraphIcon size={38} color={colors.black1000} />,
-    tooltipText: "Theo đoạn",
-    link: "/study/paragraph",
-  },
-  {
-    icon: <RoomIcon size={38} color={colors.green500} />,
-    tooltipText: "Theo lớp học",
-    link: "/study/room",
   },
 ];
 

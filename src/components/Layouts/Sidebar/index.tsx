@@ -97,21 +97,21 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       }`}
     >
       {/* SIDEBAR HEADER */}
-      <div className="flex items-center justify-center gap-2 px-6 py-5.5 lg:py-6.5">
+      <div className="flex items-center justify-center gap-2 px-6 py-4">
         <Link href="/" className="flex items-end justify-center">
-          <div className="mb-1 text-3xl font-bold text-white">Dictionary</div>
+          <div className="text-4xl font-bold text-white">Dictionary</div>
         </Link>
       </div>
 
       <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
         {/* Sidebar Menu */}
-        <nav className="mt-5 py-4 pl-4 pr-2 lg:mt-9">
+        <nav className="mt-2 py-2 pl-4 pr-2">
           <div>
-            <h3 className="mb-4 ml-4 text-sm font-semibold text-purple-200">
+            <h3 className="mb-2 ml-4 text-sm font-semibold text-purple-200">
               MENU
             </h3>
 
-            <ul className="mb-6 flex flex-col gap-1.5">
+            <ul className="mb-4 flex flex-col gap-1">
               {MenuSystem()?.map((item: any) => (
                 <React.Fragment key={item.label}>
                   {renderChildItems([item])}
@@ -121,11 +121,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
             {admin && (admin?.role === "ADMIN" || admin?.role === "TEACHER") ? (
               <>
-                <h3 className="mb-4 ml-4 text-xl font-bold text-white">
+                <h3 className="mb-2 ml-4 text-xl font-bold text-white">
                   ADMIN
                 </h3>
 
-                <ul className="mb-6 flex flex-col gap-1.5">
+                <ul className="mb-4 flex flex-col gap-1">
                   {AdminSystem(admin)?.map((item: any) => (
                     <React.Fragment key={item.label}>
                       {renderChildItems([item])}

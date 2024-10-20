@@ -28,8 +28,7 @@ const Header = (props: {
           {!sidebarOpen && (
             <div className="flex items-center gap-2">
               <Link className="flex items-end justify-center" href="/">
-                <Logo size={40} color={colors.primary400} />
-                <div className="font-bold text-black">eSign</div>
+                <div className="font-bold text-purple-500 text-4xl">Dictionary</div>
               </Link>
             </div>
           )}

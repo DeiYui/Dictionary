@@ -9,21 +9,17 @@ import { useSearchParams } from "next/navigation";
 import { FC, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
+// Import or define these types
+import { User, Topic, Vocabulary } from "@/types";
+
 export interface SectionHero2Props {
   className?: string;
-}
-interface Hero2DataType {
-  headingImg?: string;
-  image: string;
-  heading: string;
-  subHeading: string;
-  btnText: string;
 }
 
 const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
   const searchParams = useSearchParams();
   const topicId = Number(searchParams.get("topicId"));
-  const user: User = useSelector((state: RootState) => state.admin);
+  const user: User | null = useSelector((state: RootState) => state.admin);
 
   const [showModal, setShowModal] = useState<{
     open: boolean;
@@ -60,7 +56,7 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
 
       return res.data as Topic[];
     },
-    enabled: showModal.open && user.role !== "USER",
+    enabled: showModal.open && user?.role !== "USER",
   });
 
   // API lấy danh sách từ theo topics
@@ -125,7 +121,7 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
         />
         <div className="flex w-full gap-4">
           <div className="mt-2  flex-1 text-base font-bold">Chủ đề chung</div>
-          {user && user?.role === "USER" ? null : (
+          {user && user?.role !== "USER" && (
             <div className="mt-2 w-1/2 text-base font-bold ">Chủ đề riêng</div>
           )}
         </div>
@@ -139,6 +135,7 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
               bordered
               renderItem={(topic) => (
                 <List.Item
+                  key={topic.topicId}
                   className={`${showModal.topicId === topic.topicId ? "bg-green-200" : ""} hover:cursor-pointer hover:bg-neutral-300`}
                   onClick={() => {
                     setShowModal({ topicId: topic.topicId, open: false });
@@ -165,7 +162,7 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
               locale={{ emptyText: "Không có kết quả tìm kiếm" }}
             />
           </div>
-          {user.role === "USER" ? null : (
+          {user && user.role !== "USER" && (
             <div className="w-1/2">
               <List
                 className="custom-scrollbar mt-4 max-h-[450px] overflow-y-auto pb-4"
@@ -175,6 +172,7 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
                 bordered
                 renderItem={(topic) => (
                   <List.Item
+                    key={topic.topicId}
                     className={`${showModal.topicId === topic.topicId ? "bg-green-200" : ""} hover:cursor-pointer hover:bg-neutral-300`}
                     onClick={() => {
                       setShowModal({ topicId: topic.topicId, open: false });
