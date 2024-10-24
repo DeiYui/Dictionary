@@ -30,13 +30,13 @@ export const MenuSystem = () => {
       icon: <DashboardIcon />,
       hidden: false,
     },
-    {
-      key: "/friend",
-      label: "Bạn bè",
-      path: "/friend",
-      icon: <UserOutlined color="white" size={20} />,
-      hidden: !admin,
-    },
+    // {
+    //   key: "/friend",
+    //   label: "Bạn bè",
+    //   path: "/friend",
+    //   icon: <UserOutlined color="white" size={20} />,
+    //   hidden: !admin,
+    // },
     {
       key: "/study",
       label: "Học tập",
@@ -50,13 +50,13 @@ export const MenuSystem = () => {
           hidden: false,
           icon: <DotIcon color="white" size={20} />,
         },
-        {
-          key: "/study/topics",
-          label: "Chủ đề",
-          path: "/study/topics",
-          hidden: false,
-          icon: <DotIcon color="white" size={20} />,
-        },
+        // {
+        //   key: "/study/topics",
+        //   label: "Chủ đề",
+        //   path: "/study/topics",
+        //   hidden: false,
+        //   icon: <DotIcon color="white" size={20} />,
+        // },
         {
           key: "/study/vocabulary",
           label: "Từ điển học liệu",
@@ -109,13 +109,13 @@ export const MenuSystem = () => {
       icon: <ExamIcon color="white" size={20} />,
       hidden: !admin,
     },
-    {
-      key: "/collect-data",
-      label: "Thu thập dữ liệu",
-      path: "/collect-data",
-      icon: <CollectDataIcon color="white" size={20} />,
-      hidden: !admin,
-    },
+    // {
+    //   key: "/collect-data",
+    //   label: "Thu thập dữ liệu",
+    //   path: "/collect-data",
+    //   icon: <CollectDataIcon color="white" size={20} />,
+    //   hidden: !admin,
+    // },
     {
       key: "/practice-data",
       label: "Luyện tập",

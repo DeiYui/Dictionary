@@ -17,7 +17,6 @@ import {
   Form,
   Image,
   Input,
-  Table,
   Upload,
   UploadProps,
   message,
@@ -32,26 +31,20 @@ import { RootState } from "@/store";
 interface Class {
   classRoomId?: number;
   content: string;
+  teacherName: string; // Add teacherName property
   imageLocation: string;
   videoLocation?: string;
 }
 
-export const getNumberFromContent = (content: string) => {
-  const match = content.match(/\d+/);
-  return match ? parseInt(match[0], 10) : null;
-};
-
 const ClassList: React.FC = () => {
   const user: User = useSelector((state: RootState) => state.admin);
 
-  const [form] = useForm();
-  // danh sách lớp
+  const [form] = useForm(); // Ensure 'form' is used in your component
   const [lstClass, setLstClass] = useState([]);
   const [filteredLstClass, setFilteredLstClass] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState("");
   const pageSize = 10;
-  // Modal thêm mới
   const [modalCreate, setModalCreate] = useState<{
     open: boolean;
     file: string;
@@ -66,32 +59,27 @@ const ClassList: React.FC = () => {
     setCurrentPage(newPage);
   };
 
+  // Fetching the list of teachers
+  const { isFetching: isFetchingTeachers, data: teachersData } = useQuery({
+    queryKey: ["getListTeachers"],
+    queryFn: async () => {
+      const res = await Learning.getListTeachers(); // New API call for teachers
+      return res.data; // Assuming the response structure is { data: [...] }
+    },
+  });
+
   // API lấy danh sách lớp
   const { isFetching, refetch } = useQuery({
     queryKey: ["getListClass"],
     queryFn: async () => {
       const res = await Learning.getListClass();
-      setLstClass(res.data);
-      res.data?.sort((a: { content: string }, b: { content: any }) => {
-        const numA = getNumberFromContent(a.content);
-        const numB = getNumberFromContent(b.content);
-
-        if (numA !== null && numB !== null) {
-          return numA - numB;
-        } else if (numA !== null) {
-          return -1;
-        } else if (numB !== null) {
-          return 1;
-        } else {
-          return a.content.localeCompare(b.content);
-        }
-      });
+      setLstClass(res.data); // Ensure 'teacherName' is included in res.data
       setFilteredLstClass(res.data);
       return res.data as Class[];
     },
   });
 
-  // Thêm mới / chỉnh sửa  lớp
+  // Thêm mới / chỉnh sửa lớp
   const mutationCreateUpdate = useMutation({
     mutationFn:
       modalCreate.typeModal === "create"
@@ -145,24 +133,16 @@ const ClassList: React.FC = () => {
     },
     {
       title: "Tên giáo viên",
-      dataIndex: "content",
-      key: "content",
+      dataIndex: "teacherName", // Ensure this matches the data structure
+      key: "teacherName",
       render: (value: string) => <div className="text-lg">{value}</div>,
       width: 300,
     },
     {
-      title: "Minh họa",
-      dataIndex: "imageLocation",
-      key: "image",
-      render: (text: string) => (
-        <>
-          {text ? (
-            <Image src={text} alt="" />
-          ) : (
-            <div className="">Không có ảnh minh hoạ</div>
-          )}
-        </>
-      ),
+      title: "Mã lớp", // Column for "Mã lớp"
+      dataIndex: "classRoomId", // Ensure this matches the data structure
+      key: "classRoomId",
+      render: (value: number) => <div className="text-lg">{value}</div>, // Render directly
       width: 200,
     },
     user?.role === "ADMIN"
@@ -177,6 +157,7 @@ const ClassList: React.FC = () => {
                 onClick={() => {
                   form.setFieldsValue({
                     content: record.content,
+                    teacherName: record.teacherName, // Set teacherName for editing
                     file: record.imageLocation,
                     classRoomId: record.classRoomId,
                   });
@@ -199,8 +180,6 @@ const ClassList: React.FC = () => {
       : null,
   ]?.filter((item) => item);
 
-  //upload
-  // upload
   const props: UploadProps = {
     name: "file",
     onChange(info) {
@@ -225,7 +204,6 @@ const ClassList: React.FC = () => {
     },
   };
 
-  // search
   const handleSearch = useCallback(
     debounce((searchText: string) => {
       if (searchText) {
@@ -248,7 +226,7 @@ const ClassList: React.FC = () => {
   return (
     <div className="w-full p-4">
       <h1 className="mb-4 text-2xl font-bold">Danh sách lớp học</h1>
-      <div className="mb-4 flex  items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <InputPrimary
           allowClear
           onClear={() => {
@@ -335,21 +313,37 @@ const ClassList: React.FC = () => {
             form={form}
             layout="vertical"
             onFinish={(value) => {
-              if (modalCreate.typeModal === "create") {
-                mutationCreateUpdate.mutate({
-                  content: value.content,
-                  imageLocation: value.file,
-                });
-              } else {
-                mutationCreateUpdate.mutate({
-                  classRoomId: value?.classRoomId,
-                  content: value.content,
-                  imageLocation: value.file,
-                });
-              }
+              // Ensure you are using the value directly from the form
+              mutationCreateUpdate.mutate({
+                content: value.content,
+                teacherName: value.teacherName, // Include teacherName
+                classRoomId: value.classRoomId, // Use the value directly from the form
+                imageLocation: value.file,
+              });
             }}
           >
-            <Form.Item name="classRoomId" hidden />
+            <Form.Item
+              name="classRoomId"
+              label="Mã lớp"
+              className="mb-2"
+              required
+              rules={[
+                { required: true, message: "Mã lớp không được bỏ trống" },
+                { type: 'number', min: 1, message: "Mã lớp phải lớn hơn 0" }
+              ]}
+            >
+              <Input 
+                placeholder="Nhập mã lớp" 
+                type="number" 
+                min={1} 
+                onKeyPress={(e) => {
+                  // Prevent non-numeric input
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+              />
+            </Form.Item>
             <Form.Item
               name="content"
               label="Tên lớp học"
@@ -360,7 +354,7 @@ const ClassList: React.FC = () => {
               <Input placeholder="Nhập tên lớp học muốn thêm" />
             </Form.Item>
             <Form.Item
-              name="content"
+              name="teacherName" // Change to teacherName
               label="Tên giáo viên"
               className="mb-2"
               required

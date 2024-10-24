@@ -229,6 +229,12 @@ class Learning extends Base {
     const res = await this.apiGet(`/introductions`);
     return res.data;
   };
+
+  // New method to get the list of teachers
+  getListTeachers = async (params?: any) => {
+    const res = await this.apiGet(`/teachers/all`, params); // Adjust the endpoint as necessary
+    return res.data;
+  };
 }
 
 export default new Learning("learning-service");
