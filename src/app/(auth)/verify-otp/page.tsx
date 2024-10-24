@@ -4,7 +4,7 @@ import LayoutAuth from "..";
 import VerifyOtp from "@/components/Auth/VerifyOTP";
 
 export const metadata: Metadata = {
-  title: "VerifyOtp - We_sign",
+  title: "VerifyOtp - Dictionary",
   description: "VerifyOtp page for We_sign",
   icons: {
     icon: [

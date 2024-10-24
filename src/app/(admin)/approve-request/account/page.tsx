@@ -5,7 +5,7 @@ import React from "react";
 import RequestPage from "./RequestPage";
 
 export const metadata: Metadata = {
-  title: "Approve-Request Account - We_sign",
+  title: "Approve-Request Account - Dictionary",
   description: "Approve-Request Account page for We_sign",
   icons: {
     icon: [

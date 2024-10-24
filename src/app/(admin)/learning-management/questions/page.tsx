@@ -5,7 +5,7 @@ import React from "react";
 import QuestionList from "./QuestionList";
 
 export const metadata: Metadata = {
-  title: "Questions-management - We_sign",
+  title: "Questions-management - Dictionary",
   description: "Questions-management page for We_sign",
   icons: {
     icon: [

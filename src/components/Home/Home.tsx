@@ -43,7 +43,7 @@ export const HERO2_DEMO_DATA: Hero2DataType[] = [
     image: "/images/study/study-vocabulary.svg",
     subHeading: "Học tập",
     heading: "Học tập theo từ vựng",
-    btnText: "Từ vựng",
+    btnText: "Từ điển học liệu",
     btnLink: "/study/vocabulary",
   },
   {

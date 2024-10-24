@@ -4,7 +4,7 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Learning-management - We_sign",
+  title: "Learning-management - Dictionary",
   description: "Learning-management page for We_sign",
   icons: {
     icon: [

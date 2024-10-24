@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import Rooms from "./Room";
 
 export const metadata: Metadata = {
-  title: "LearnRoom- We_sign",
+  title: "LearnRoom- Dictionary",
   description: "LearnRoom page for We_sign",
   icons: {
     icon: [

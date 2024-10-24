@@ -5,7 +5,7 @@ import React from "react";
 import TopicList from "../TopicList";
 
 export const metadata: Metadata = {
-  title: "Management-topics  - We_sign",
+  title: "Management-topics  - Dictionary",
   description: "Management-topics page for We_sign",
   icons: {
     icon: [

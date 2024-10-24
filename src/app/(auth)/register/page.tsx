@@ -4,7 +4,7 @@ import LayoutAuth from "..";
 import Register from "@/components/Auth/Register";
 
 export const metadata: Metadata = {
-  title: "Register - We_sign",
+  title: "Register - Dictionary",
   description: "Register page for We_sign",
   icons: {
     icon: [

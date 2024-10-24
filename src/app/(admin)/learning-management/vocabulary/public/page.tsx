@@ -4,7 +4,7 @@ import React from "react";
 import VocabularyList from "../VocabularyList";
 
 export const metadata: Metadata = {
-  title: "Management-vocabulary- We_sign",
+  title: "Management-vocabulary- Dictionary",
   description: "Management-vocabulary page for We_sign",
   icons: {
     icon: [

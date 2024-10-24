@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import LearnHome from "../../components/Study/LearnHome";
 
 export const metadata: Metadata = {
-  title: "Learn - We_sign",
+  title: "Learn - Dictionary",
   description: "Learn page for We_sign",
   icons: {
     icon: [

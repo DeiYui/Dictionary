@@ -4,7 +4,7 @@ import React from "react";
 import CreateAndEditExamPage from "./ExamCreate";
 
 export const metadata: Metadata = {
-  title: "create-update-exam- We_sign",
+  title: "create-update-exam- Dictionary",
   description: "createUpdate-exam page for We_sign",
   icons: {
     icon: [

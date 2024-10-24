@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import Topics from "./Topics";
 
 export const metadata: Metadata = {
-  title: "LearnTopics - We_sign",
+  title: "LearnTopics - Dictionary",
   description: "LearnTopics page for We_sign",
   icons: {
     icon: [

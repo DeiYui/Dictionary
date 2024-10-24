@@ -4,7 +4,7 @@ import React from "react";
 import VocabularyCreateUpdate from "./VocabularyCreateUpdate";
 
 export const metadata: Metadata = {
-  title: "create-update-vocabulary- We_sign",
+  title: "create-update-vocabulary- Dictionary",
   description: "createUpdate-vocabulary page for We_sign",
   icons: {
     icon: [

@@ -4,7 +4,7 @@ import React from "react";
 import Vocabulary from "./Sentence";
 
 export const metadata: Metadata = {
-  title: "LearnSentence - We_sign",
+  title: "LearnSentence - Dictionary",
   description: "LearnSentence page for We_sign",
   icons: {
     icon: [

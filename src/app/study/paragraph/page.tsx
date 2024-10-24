@@ -4,7 +4,7 @@ import React from "react";
 import Vocabulary from "./Paragraph";
 
 export const metadata: Metadata = {
-  title: "LearnParagraph - We_sign",
+  title: "LearnParagraph - Dictionary",
   description: "LearnParagraph page for We_sign",
   icons: {
     icon: [

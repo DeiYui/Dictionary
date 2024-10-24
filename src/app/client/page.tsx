@@ -4,7 +4,7 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Collect-data - We_sign",
+  title: "Collect-data - Dictionary",
   description: "Collect-data page for We_sign",
   icons: {
     icon: [

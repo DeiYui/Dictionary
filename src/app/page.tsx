@@ -4,8 +4,8 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Home - We_sign",
-  description: "Home page for We_sign",
+  title: "Home - Dictionary",
+  description: "Home page for Dictionary",
   icons: {
     icon: [
       {

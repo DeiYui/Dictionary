@@ -4,7 +4,7 @@ import React from "react";
 import QuestionEdit from "./QuestionEdit";
 
 export const metadata: Metadata = {
-  title: "Questions-management - We_sign",
+  title: "Questions-management - Dictionary",
   description: "Questions-management page for We_sign",
   icons: {
     icon: [

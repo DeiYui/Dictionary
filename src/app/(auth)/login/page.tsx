@@ -4,7 +4,7 @@ import LayoutAuth from "..";
 import Login from "@/components/Auth/Login";
 
 export const metadata: Metadata = {
-  title: "Login - We_sign",
+  title: "Login - Dictionary",
   description: "Login page for We_sign",
   icons: {
     icon: [

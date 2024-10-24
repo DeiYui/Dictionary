@@ -5,7 +5,7 @@ import React from "react";
 import ChatCard from "@/components/Chat/ChatCard";
 
 export const metadata: Metadata = {
-  title: "Chat- We_sign",
+  title: "Chat- Dictionary",
   description: "Chat page for We_sign",
   icons: {
     icon: [

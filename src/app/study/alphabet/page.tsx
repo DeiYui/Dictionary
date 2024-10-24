@@ -5,7 +5,7 @@ import LearnHome from "../../../components/Study/LearnHome";
 import Projects from "./Alphabet";
 
 export const metadata: Metadata = {
-  title: "LearnAlphabet - We_sign",
+  title: "LearnAlphabet - Dictionary",
   description: "LearnAlphabet page for We_sign",
   icons: {
     icon: [

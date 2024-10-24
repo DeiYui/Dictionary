@@ -5,7 +5,7 @@ import React from "react";
 import FileMobile from "./FileMobile";
 
 export const metadata: Metadata = {
-  title: "FIle Mobile - We_sign",
+  title: "FIle Mobile - Dictionary",
   description: "FIle Mobile page for We_sign",
   icons: {
     icon: [

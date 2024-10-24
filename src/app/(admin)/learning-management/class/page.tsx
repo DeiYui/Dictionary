@@ -5,7 +5,7 @@ import React from "react";
 import ClassList from "./ClassList";
 
 export const metadata: Metadata = {
-  title: "Management-class  - We_sign",
+  title: "Management-class  - Dictionary",
   description: "Management-class page for We_sign",
   icons: {
     icon: [

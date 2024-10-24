@@ -5,7 +5,7 @@ import React from "react";
 import Friend from "@/components/Friend";
 
 export const metadata: Metadata = {
-  title: "Friend - We_sign",
+  title: "Friend - Dictionary",
   description: "Friend page for We_sign",
   icons: {
     icon: [

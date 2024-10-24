@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import PracticeData from "./PracticeData";
 
 export const metadata: Metadata = {
-  title: "Practice-data - We_sign",
+  title: "Practice-data - Dictionary",
   description: "Practice-data page for We_sign",
   icons: {
     icon: [

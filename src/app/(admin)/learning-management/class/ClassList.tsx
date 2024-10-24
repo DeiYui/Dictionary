@@ -141,6 +141,14 @@ const ClassList: React.FC = () => {
       dataIndex: "content",
       key: "content",
       render: (value: string) => <div className="text-lg">{value}</div>,
+      width: 200,
+    },
+    {
+      title: "Tên giáo viên",
+      dataIndex: "content",
+      key: "content",
+      render: (value: string) => <div className="text-lg">{value}</div>,
+      width: 300,
     },
     {
       title: "Minh họa",
@@ -350,6 +358,15 @@ const ClassList: React.FC = () => {
               rules={[validateRequireInput("Tên lớp học không được bỏ trống")]}
             >
               <Input placeholder="Nhập tên lớp học muốn thêm" />
+            </Form.Item>
+            <Form.Item
+              name="content"
+              label="Tên giáo viên"
+              className="mb-2"
+              required
+              rules={[validateRequireInput("Tên giáo viên không được bỏ trống")]}
+            >
+              <Input placeholder="Nhập tên giáo viên" />
             </Form.Item>
             <Form.Item name="file" label="Ảnh">
               <Upload {...props} showUploadList={false}>

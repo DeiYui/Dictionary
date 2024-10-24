@@ -5,7 +5,7 @@ import React from "react";
 import IntroductionPage from "./IntroductionPage";
 
 export const metadata: Metadata = {
-  title: "IntroductionManagement - We_sign",
+  title: "IntroductionManagement - Dictionary",
   description: "IntroductionManagement page for We_sign",
   icons: {
     icon: [

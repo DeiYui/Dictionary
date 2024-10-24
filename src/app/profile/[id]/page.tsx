@@ -4,7 +4,7 @@ import ProfileEdit from "@/components/Profile/ProfileEdit";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Profile - We_sign",
+  title: "Profile - Dictionary",
   description: "Profile page for We_sign",
   icons: {
     icon: [

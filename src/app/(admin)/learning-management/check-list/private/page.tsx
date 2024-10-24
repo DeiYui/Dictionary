@@ -4,7 +4,7 @@ import React from "react";
 import ExamListPage from "../ExamList";
 
 export const metadata: Metadata = {
-  title: "Management-exam - We_sign",
+  title: "Management-exam - Dictionary",
   description: "Management-exam page for We_sign",
   icons: {
     icon: [

@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import Alphanumeric from "./Alphanumeric";
 
 export const metadata: Metadata = {
-  title: "LearnAlphanumeric- We_sign",
+  title: "LearnAlphanumeric- Dictionary",
   description: "LearnAlphanumeric page for We_sign",
   icons: {
     icon: [
