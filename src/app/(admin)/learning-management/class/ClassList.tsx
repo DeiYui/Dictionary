@@ -40,8 +40,8 @@ const ClassList: React.FC = () => {
   const user: User = useSelector((state: RootState) => state.admin);
 
   const [form] = useForm(); // Ensure 'form' is used in your component
-  const [lstClass, setLstClass] = useState([]);
-  const [filteredLstClass, setFilteredLstClass] = useState([]);
+  const [lstClass, setLstClass] = useState<Class[]>([]);
+  const [filteredLstClass, setFilteredLstClass] = useState<Class[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState("");
   const pageSize = 10;
@@ -60,39 +60,50 @@ const ClassList: React.FC = () => {
   };
 
   // Fetching the list of teachers
-  const { isFetching: isFetchingTeachers, data: teachersData } = useQuery({
-    queryKey: ["getListTeachers"],
-    queryFn: async () => {
-      const res = await Learning.getListTeachers(); // New API call for teachers
-      return res.data; // Assuming the response structure is { data: [...] }
-    },
-  });
+
 
   // API lấy danh sách lớp
   const { isFetching, refetch } = useQuery({
     queryKey: ["getListClass"],
     queryFn: async () => {
       const res = await Learning.getListClass();
+      console.log("API Response:", res.data);
       setLstClass(res.data); // Ensure 'teacherName' is included in res.data
       setFilteredLstClass(res.data);
       return res.data as Class[];
     },
   });
 
-  // Thêm mới / chỉnh sửa lớp
-  const mutationCreateUpdate = useMutation({
-    mutationFn:
+ // Thêm mới / chỉnh sửa lớp
+const mutationCreateUpdate = useMutation({
+  mutationFn: modalCreate.typeModal === "create" ? Learning.createClass : Learning.editClass,
+  onSuccess: (res, variables) => {
+    const updatedClass = {
+      ...variables,  // lấy dữ liệu từ form bao gồm teacherName và các trường khác
+      classRoomId: res.classRoomId, // cập nhật lại từ response nếu cần
+    };
+    
+    // Cập nhật danh sách lớp học trong state ngay lập tức
+    setLstClass((prevLst) =>
       modalCreate.typeModal === "create"
-        ? Learning.createClass
-        : Learning.editClass,
-    onSuccess: (res) => {
-      message.success(
-        `${modalCreate.typeModal === "create" ? "Thêm mới lớp học thành công" : "Cập nhật lớp học thành công"}`,
-      );
-      refetch();
-      setModalCreate({ ...modalCreate, open: false, file: "" });
-    },
-  });
+        ? [...prevLst, updatedClass] // Thêm lớp mới vào cuối danh sách
+        : prevLst.map((cls) => (cls.classRoomId === res.classRoomId ? updatedClass : cls)) // Cập nhật lớp đã có
+    );
+    setFilteredLstClass((prevLst) =>
+      modalCreate.typeModal === "create"
+        ? [...prevLst, updatedClass] // Thêm lớp mới vào cuối danh sách
+        : prevLst.map((cls) => (cls.classRoomId === res.classRoomId ? updatedClass : cls)) // Cập nhật lớp đã có
+    );
+
+    message.success(
+      `${modalCreate.typeModal === "create" ? "Thêm mới lớp học thành công" : "Cập nhật lớp học thành công"}`
+    );
+    
+    setModalCreate({ ...modalCreate, open: false, file: "" });
+    form.resetFields();
+  },
+});
+
 
   // Xoá lớp
   const mutationDel = useMutation({
@@ -133,11 +144,11 @@ const ClassList: React.FC = () => {
     },
     {
       title: "Tên giáo viên",
-      dataIndex: "teacherName", // Ensure this matches the data structure
+      dataIndex: "teacherName",
       key: "teacherName",
       render: (value: string) => <div className="text-lg">{value}</div>,
       width: 300,
-    },
+    },    
     {
       title: "Mã lớp", // Column for "Mã lớp"
       dataIndex: "classRoomId", // Ensure this matches the data structure
@@ -329,7 +340,6 @@ const ClassList: React.FC = () => {
               required
               rules={[
                 { required: true, message: "Mã lớp không được bỏ trống" },
-                { type: 'number', min: 1, message: "Mã lớp phải lớn hơn 0" }
               ]}
             >
               <Input 

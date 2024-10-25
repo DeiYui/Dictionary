@@ -1,42 +1,41 @@
 "use client";
-import StudyComponent from "@/components/Study/StudyComponent";
-import ButtonSecondary from "@/components/UI/Button/ButtonSecondary";
 import { default as Learning } from "@/model/Learning";
 import { RootState } from "@/store";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Input, List, Modal, Skeleton, Spin } from "antd";
-import { useSearchParams } from "next/navigation";
+import { Input, Select, Spin, Table, Modal, Image } from "antd";
+import { EyeOutlined } from "@ant-design/icons";
 import { FC, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-
-// Import or define these types
-import { User, Topic, Vocabulary } from "@/types";
+import { Topic, User, Vocabulary } from "@/types";
 
 export interface SectionHero2Props {
   className?: string;
 }
 
 const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
-  const searchParams = useSearchParams();
-  const topicId = Number(searchParams.get("topicId"));
   const user: User | null = useSelector((state: RootState) => state.admin);
 
-  const [showModal, setShowModal] = useState<{
+  const [searchText, setSearchText] = useState<string>("");
+  const [selectedClass, setSelectedClass] = useState<string | undefined>(undefined);
+  const [filteredTopics, setFilteredTopics] = useState<Topic[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [modalPreview, setModalPreview] = useState<{
     open: boolean;
-    topicId: number;
+    file: string;
   }>({
     open: false,
-    topicId: 0,
+    file: "",
+  });
+  const [vocabularyModal, setVocabularyModal] = useState<{
+    open: boolean;
+    topicId: number | null;
+  }>({
+    open: false,
+    topicId: null,
   });
 
-  const [searchText, setSearchText] = useState<string>("");
-  const [filteredTopics, setFilteredTopics] = useState<Topic[]>([]);
-  const [topicPrivates, setTopicPrivates] = useState<Topic[]>([]);
-
-  const token = localStorage.getItem("access_token");
-
   // API lấy danh sách topics
-  const { data: allTopicsPublic, isFetching } = useQuery({
+  const { data: allTopics, isFetching } = useQuery({
     queryKey: ["getAllTopics"],
     queryFn: async () => {
       const res = await Learning.getAllTopics({
@@ -44,168 +43,271 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
       });
       return res.data as Topic[];
     },
-    enabled: showModal.open,
   });
 
-  const { data: allTopicsPrivate, isFetching: isFetchingPrivate } = useQuery({
-    queryKey: ["getAllTopicsPrivate"],
+  // API lấy danh sách lớp
+  const { data: allClasses } = useQuery({
+    queryKey: ["getListClass"],
     queryFn: async () => {
-      const res = await Learning.getAllTopics({
-        isPrivate: "true",
-      });
-
-      return res.data as Topic[];
+      const res = await Learning.getListClass();
+      return res.data.map((cls: { classRoomId: number; content: string }) => ({
+        value: cls.classRoomId,
+        label: cls.content,
+      }));
     },
-    enabled: showModal.open && user?.role !== "USER",
-  });
-
-  // API lấy danh sách từ theo topics
-  const { data: allVocabulary, isFetching: isFetchingVocabulary } = useQuery({
-    queryKey: ["getVocabularyTopic", showModal.topicId],
-    queryFn: async () => {
-      const res = await Learning.getVocabularyTopic(showModal.topicId);
-      return (res?.data as Vocabulary[]) || [];
-    },
-    enabled: !!showModal.topicId,
   });
 
   useEffect(() => {
-    if (topicId) {
-      setShowModal({ open: false, topicId });
+    if (allTopics) {
+      let filtered = allTopics;
+      if (searchText) {
+        filtered = filtered.filter((topic) =>
+          topic.content.toLowerCase().includes(searchText.toLowerCase())
+        );
+      }
+      if (selectedClass) {
+        filtered = filtered.filter((topic) => topic.classRoomId === Number(selectedClass));
+      }
+      setFilteredTopics(filtered);
     }
-  }, [topicId]);
+  }, [searchText, selectedClass, allTopics]);
 
-  // Tìm kiếm
-  useEffect(() => {
-    if (allTopicsPublic) {
-      setFilteredTopics(
-        allTopicsPublic.filter((topic) =>
-          topic?.content?.toLowerCase().includes(searchText.toLowerCase()),
-        ),
-      );
-    }
-    if (allTopicsPrivate) {
-      setTopicPrivates(
-        allTopicsPrivate.filter((topic) =>
-          topic?.content?.toLowerCase().includes(searchText.toLowerCase()),
-        ),
-      );
-    }
-  }, [searchText, allTopicsPublic, allTopicsPrivate]);
+  const columns = [
+    {
+      title: "STT",
+      key: "index",
+      render: (_: any, __: any, index: number) => (currentPage - 1) * 10 + index + 1,
+      width: 50,
+    },
+    {
+      title: "Tên chủ đề",
+      dataIndex: "content",
+      key: "content",
+      render: (value: string, record: Topic) => (
+        <div
+          className="text-lg cursor-pointer text-blue-500"
+          onClick={() => setVocabularyModal({ open: true, topicId: record.topicId })}
+        >
+          {value}
+        </div>
+      ),
+    },
+    {
+      title: "Minh họa",
+      dataIndex: "imageLocation",
+      key: "image",
+      render: (text: string) => (
+        <>
+          {text ? (
+            <EyeOutlined
+              style={{ fontSize: "1.5rem", marginLeft: 8 }}
+              onClick={() =>
+                setModalPreview({
+                  open: true,
+                  file: text,
+                })
+              }
+            />
+          ) : (
+            <div className="">Không có ảnh minh hoạ</div>
+          )}
+        </>
+      ),
+      width: 200,
+    },
+    {
+      title: "Lớp",
+      dataIndex: "classRoomContent",
+      key: "classRoomContent",
+      render: (value: string) => <div className="text-lg">{value}</div>,
+    },
+  ];
+
+  const handleTableChange = (pagination: any) => {
+    setCurrentPage(pagination.current);
+  };
+
+  const { data: vocabularyList, isFetching: isFetchingVocabulary } = useQuery({
+    queryKey: ["getVocabularyByTopic", vocabularyModal.topicId],
+    queryFn: async () => {
+      if (vocabularyModal.topicId === null) return [];
+      const res = await Learning.getVocabularyByTopic(vocabularyModal.topicId);
+      return res.data as Vocabulary[];
+    },
+    enabled: vocabularyModal.open,
+  });
+
+  const vocabularyColumns = [
+    {
+      title: "Từ vựng",
+      dataIndex: "content",
+      key: "content",
+      render: (content: any, record: any) => (
+        <span
+          className="w-[200px] cursor-pointer truncate "
+          style={{
+            fontWeight: 500,
+            color: "#1890ff",
+            maxWidth: "200px",
+          }}
+        >
+          {content}
+        </span>
+      ),
+      ellipsis: true,
+      width: 200,
+    },
+    {
+      title: "Chủ đề",
+      dataIndex: "topicContent",
+      key: "topicContent",
+      render: (content: string) => (
+        <span style={{ fontWeight: 500 }}>{content}</span>
+      ),
+      ellipsis: true,
+      width: 100,
+    },
+    {
+      title: "Loại từ vựng",
+      dataIndex: "vocabularyType",
+      key: "vocabularyType",
+      render: (content: string) => (
+        <span style={{ fontWeight: 500 }}>
+          {content === "WORD"
+            ? "Từ"
+            : content === "SENTENCE"
+            ? "Câu"
+            : content === "PARAGRAPH"
+            ? "Đoạn"
+            : content}
+        </span>
+      ),
+      ellipsis: true,
+      width: 100,
+    },
+    {
+      title: "Ảnh minh hoạ",
+      dataIndex: "imageLocation",
+      key: "imageLocation",
+      align: "center",
+      render: (
+        imageLocation: any,
+        record: {
+          vocabularyImageResList: string | any[];
+          content: string | undefined;
+        },
+      ) => {
+        if (
+          record.vocabularyImageResList?.length &&
+          record.vocabularyImageResList[0].imageLocation
+        ) {
+          return (
+            <EyeOutlined
+              style={{ fontSize: "1.5rem" }}
+              onClick={() =>
+                setModalPreview({
+                  open: true,
+                  file: record.vocabularyImageResList[0].imageLocation,
+                  type: "image",
+                })
+              }
+            />
+          );
+        } else {
+          return <span>Không có minh họa</span>;
+        }
+      },
+      width: 120,
+    },
+    {
+      title: "Video minh hoạ",
+      dataIndex: "videoLocation",
+      key: "videoLocation",
+      align: "center",
+      render: (
+        videoLocation: any,
+        record: { vocabularyVideoResList: string | any[] },
+      ) => {
+        if (
+          record.vocabularyVideoResList?.length &&
+          record.vocabularyVideoResList[0].videoLocation
+        ) {
+          return (
+            <EyeOutlined
+              style={{ fontSize: "1.5rem" }}
+              onClick={() =>
+                setModalPreview({
+                  open: true,
+                  file: record.vocabularyVideoResList[0].videoLocation,
+                  type: "video",
+                })
+              }
+            />
+          );
+        } else {
+          return <span>Không video có minh họa</span>;
+        }
+      },
+      width: 200,
+    },
+  ];
 
   return (
-    <Spin spinning={isFetchingVocabulary}>
-      <ButtonSecondary
-        className="mb-4 border border-solid border-neutral-700"
-        onClick={() => setShowModal({ ...showModal, open: true })}
-      >
-        Lựa chọn chủ đề
-      </ButtonSecondary>
-      <StudyComponent allVocabulary={allVocabulary} />
+    <Spin spinning={isFetching}>
+      <h1 className="mb-4 text-2xl font-bold">Danh sách chủ đề</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Input
+            allowClear
+            style={{ width: 300 }}
+            placeholder="Tìm kiếm chủ đề"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <Select
+            style={{ width: 200 }}
+            placeholder="Lọc theo lớp"
+            allowClear
+            options={allClasses}
+            onChange={(value) => setSelectedClass(value)}
+          />
+        </div>
+      </div>
+      <Table
+        columns={columns}
+        dataSource={filteredTopics}
+        pagination={{
+          pageSize: 10,
+          current: currentPage,
+          onChange: handleTableChange,
+        }}
+        rowKey="topicId"
+      />
 
-      {/* Modal */}
       <Modal
-        width={1000}
-        title="Danh sách chủ đề"
-        open={showModal.open}
-        centered
+        visible={modalPreview.open}
         footer={null}
-        onCancel={() => setShowModal({ ...showModal, open: false })}
+        onCancel={() => setModalPreview({ open: false, file: "" })}
       >
-        <Input
-          size="large"
-          placeholder="Nhập chủ đề muốn tìm kiếm"
-          className="w-2/3"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-        <div className="flex w-full gap-4">
-          <div className="mt-2  flex-1 text-base font-bold">Chủ đề chung</div>
-          {user && user?.role !== "USER" && (
-            <div className="mt-2 w-1/2 text-base font-bold ">Chủ đề riêng</div>
-          )}
-        </div>
-        <div className="flex w-full items-center gap-4">
-          <div className="flex-1">
-            <List
-              className="custom-scrollbar mt-4 max-h-[450px] overflow-y-auto pb-4"
-              loading={isFetching}
-              itemLayout="horizontal"
-              dataSource={filteredTopics}
-              bordered
-              renderItem={(topic) => (
-                <List.Item
-                  key={topic.topicId}
-                  className={`${showModal.topicId === topic.topicId ? "bg-green-200" : ""} hover:cursor-pointer hover:bg-neutral-300`}
-                  onClick={() => {
-                    setShowModal({ topicId: topic.topicId, open: false });
-                  }}
-                >
-                  <Skeleton avatar title={false} loading={isFetching} active>
-                    <List.Item.Meta
-                      avatar={
-                        <Avatar
-                          className="mt-1"
-                          size={50}
-                          src={topic?.imageLocation}
-                        />
-                      }
-                      title={
-                        <div className="mt-3 text-base font-semibold">
-                          {topic?.content}
-                        </div>
-                      }
-                    />
-                  </Skeleton>
-                </List.Item>
-              )}
-              locale={{ emptyText: "Không có kết quả tìm kiếm" }}
-            />
-          </div>
-          {user && user.role !== "USER" && (
-            <div className="w-1/2">
-              <List
-                className="custom-scrollbar mt-4 max-h-[450px] overflow-y-auto pb-4"
-                loading={isFetchingPrivate}
-                itemLayout="horizontal"
-                dataSource={topicPrivates}
-                bordered
-                renderItem={(topic) => (
-                  <List.Item
-                    key={topic.topicId}
-                    className={`${showModal.topicId === topic.topicId ? "bg-green-200" : ""} hover:cursor-pointer hover:bg-neutral-300`}
-                    onClick={() => {
-                      setShowModal({ topicId: topic.topicId, open: false });
-                    }}
-                  >
-                    <Skeleton
-                      avatar
-                      title={false}
-                      loading={isFetchingPrivate}
-                      active
-                    >
-                      <List.Item.Meta
-                        avatar={
-                          <Avatar
-                            className="mt-1"
-                            size={50}
-                            src={topic?.imageLocation}
-                          />
-                        }
-                        title={
-                          <div className="mt-3 text-base font-semibold">
-                            {topic?.content}
-                          </div>
-                        }
-                      />
-                    </Skeleton>
-                  </List.Item>
-                )}
-                locale={{ emptyText: "Không có kết quả tìm kiếm" }}
-              />
-            </div>
-          )}
-        </div>
+        <Image width="100%" src={modalPreview.file} />
+      </Modal>
+
+      <Modal
+        visible={vocabularyModal.open}
+        footer={null}
+        onCancel={() => setVocabularyModal({ open: false, topicId: null })}
+        width={1000}
+      >
+        <Spin spinning={isFetchingVocabulary}>
+          <Table
+            columns={vocabularyColumns}
+            dataSource={vocabularyList}
+            pagination={{
+              pageSize: 10,
+            }}
+            rowKey="vocabularyId"
+          />
+        </Spin>
       </Modal>
     </Spin>
   );

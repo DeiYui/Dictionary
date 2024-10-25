@@ -1,22 +1,30 @@
 "use client";
-import { SearchIcon } from "@/assets/icons";
-import StudyComponent from "@/components/Study/StudyComponent";
-import InputPrimary from "@/components/UI/Input/InputPrimary";
-import Learning from "@/model/Learning";
-import {
-  DeleteOutlined,
-  EditOutlined,
-  EyeOutlined,
-  FileAddFilled,
-  PlusOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
 import { RootState } from "@/store";
 import { useQuery } from "@tanstack/react-query";
-import { Spin, message, Table, Select, Input, Image, Modal } from "antd";
-import { FC, useState, useCallback } from "react";
+import { Spin, message, Table, Select, Input, Image, Modal, Button, Carousel } from "antd";
+import { FC, useState, useCallback, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { debounce } from "lodash";
+import { EyeOutlined, LeftOutlined, RightOutlined, SearchOutlined } from "@ant-design/icons";
+import Learning from "@/model/Learning";
+import styled from "styled-components";
+import ButtonPrimary from "@/components/UI/Button/ButtonPrimary";
+
+const CustomSlider = styled(Carousel)`
+  &.ant-carousel {
+    width: 100%;
+  }
+  .slick-slide.slick-active.slick-current {
+    display: flex;
+    justify-content: center;
+  }
+`;
+
+const TYPE_VOCABULARY = {
+  WORD: "WORD",
+  SENTENCE: "SENTENCE",
+  PARAGRAPH: "PARAGRAPH",
+};
 
 export interface SectionHero2Props {
   className?: string;
@@ -46,8 +54,79 @@ const Vocabulary: FC<SectionHero2Props> = ({ className = "" }) => {
     type: "image",
   });
 
+  const [vocabularyModal, setVocabularyModal] = useState<{
+    open: boolean;
+    vocabulary: any;
+  }>({
+    open: false,
+    vocabulary: null,
+  });
+
+  const [fileIndex, setFileIndex] = useState(0);
+  const slider = useRef<any>(null);
+  const videoRef = useRef<any>(null);
+  const [autoplayEnabled, setAutoplay] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [videoCurrent, setVideoCurrent] = useState<any>();
+
+  useEffect(() => {
+    if (vocabularyModal.open) {
+      setAutoplay(true);
+      setVideoCurrent(
+        vocabularyModal.vocabulary?.vocabularyVideoResList[0]?.videoLocation,
+      );
+      setCurrentVideoIndex(0);
+    }
+  }, [vocabularyModal.open, vocabularyModal.vocabulary]);
+
+  const handleNextVideo = () => {
+    const nextIndex = currentVideoIndex + 1;
+    if (nextIndex < vocabularyModal.vocabulary?.vocabularyVideoResList?.length) {
+      setCurrentVideoIndex(nextIndex);
+      setAutoplay(true);
+      setVideoCurrent(
+        vocabularyModal.vocabulary?.vocabularyVideoResList[nextIndex]
+          .videoLocation,
+      );
+    }
+  };
+
+  const handlePreviousVideo = () => {
+    const previousIndex = currentVideoIndex - 1;
+    if (previousIndex >= 0) {
+      setCurrentVideoIndex(previousIndex);
+      setAutoplay(true);
+      setVideoCurrent(
+        vocabularyModal.vocabulary?.vocabularyVideoResList[previousIndex]
+          .videoLocation,
+      );
+    }
+  };
+
+  const handleNext = () => {
+    if (fileIndex < vocabularyModal.vocabulary.vocabularyImageResList.length - 1) {
+      setFileIndex(fileIndex + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (fileIndex > 0) {
+      setFileIndex(fileIndex - 1);
+    }
+  };
+
   const handleTableChange = (newPage: number) => {
     setCurrentPage(newPage);
+  };
+
+  const onCloseDetail = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+    setAutoplay(false);
+    setVideoCurrent(null);
+    setVocabularyModal({ open: false, vocabulary: null });
   };
 
   // API lấy danh sách topics
@@ -113,6 +192,7 @@ const Vocabulary: FC<SectionHero2Props> = ({ className = "" }) => {
             color: "#1890ff",
             maxWidth: "200px",
           }}
+          onClick={() => setVocabularyModal({ open: true, vocabulary: record })}
         >
           {content}
         </span>
@@ -263,7 +343,7 @@ const Vocabulary: FC<SectionHero2Props> = ({ className = "" }) => {
               handleSearch(e.currentTarget.value);
             }
           }}
-          suffix={<SearchIcon size={24} />}
+          suffix={<SearchOutlined />}
         />
       </div>
 
@@ -294,112 +374,168 @@ const Vocabulary: FC<SectionHero2Props> = ({ className = "" }) => {
           </video>
         )}
       </Modal>
+
+      <Modal
+        open={vocabularyModal.open}
+        footer={null}
+        onCancel={onCloseDetail}
+        title={
+          <>
+            {vocabularyModal.vocabulary &&
+            vocabularyModal.vocabulary.vocabularyType === TYPE_VOCABULARY.WORD ? (
+              <div className="line-clamp-1 text-[32px] font-bold">
+                {vocabularyModal.vocabulary?.content}
+              </div>
+            ) : (
+              <div>
+                {vocabularyModal.vocabulary &&
+                vocabularyModal.vocabulary.vocabularyType === TYPE_VOCABULARY.SENTENCE ? (
+                  <div className="line-clamp-1 text-[32px] font-bold">
+                    Học tập theo câu văn
+                  </div>
+                ) : (
+                  <div className="line-clamp-1 text-[32px] font-bold">
+                    Học tập theo đoạn văn
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        }
+        width={1420}
+        key={vocabularyModal.vocabulary?.content}
+        centered
+      >
+        <div className="w-full px-4">
+          <div className="w-full">
+            <div className="grid grid-cols-3 items-center gap-3">
+              <CustomSlider
+                ref={slider}
+                className="flex w-full items-center justify-center"
+                dots={false}
+              >
+                {vocabularyModal.vocabulary?.vocabularyImageResList?.map(
+                  (
+                    item: { imageLocation: string | undefined },
+                    index: React.Key | null | undefined,
+                  ) => (
+                    <div key={index}>
+                      {item.imageLocation ? (
+                        <div className="text-center">
+                          <Image
+                            preview={false}
+                            src={item.imageLocation}
+                            alt="imageLocation"
+                            className="flex max-h-[400px] w-[400px] items-center justify-center object-scale-down"
+                          />
+                          {vocabularyModal.vocabulary && (
+                            <>
+                              <div
+                                className="line-clamp-[10] w-[420px] overflow-y-auto text-left text-[18px]"
+                                style={{
+                                  display:
+                                    vocabularyModal.vocabulary.vocabularyType !== TYPE_VOCABULARY.WORD
+                                      ? "block"
+                                      : "none",
+                                }}
+                              >
+                                {vocabularyModal.vocabulary?.content}
+                              </div>
+                              {vocabularyModal.vocabulary?.note && (
+                                <div className="mt-2">
+                                  {vocabularyModal.vocabulary?.note}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center text-xl">
+                          Chưa có hình ảnh minh hoạ
+                        </div>
+                      )}
+                    </div>
+                  ),
+                )}
+              </CustomSlider>
+
+              <div className="col-span-2">
+                {videoCurrent ? (
+                  <video
+                    key={videoCurrent}
+                    controls
+                    ref={videoRef}
+                    autoPlay={autoplayEnabled}
+                    style={{ width: "100%", height: 550 }}
+                    onEnded={() => setAutoplay(false)}
+                  >
+                    <source src={videoCurrent} type="video/mp4" />
+                  </video>
+                ) : (
+                  <div className="text-center text-xl">
+                    Chưa có video minh hoạ
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-between px-4">
+          <div className="flex w-1/3 justify-center">
+            <Button
+              style={{
+                display:
+                  vocabularyModal.vocabulary?.vocabularyImageResList?.length < 2
+                    ? "none"
+                    : "block",
+              }}
+              icon={<LeftOutlined />}
+              onClick={() => slider.current.prev()}
+            />
+            <Button
+              style={{
+                display:
+                  vocabularyModal.vocabulary?.vocabularyImageResList?.length < 2
+                    ? "none"
+                    : "block",
+              }}
+              icon={<RightOutlined />}
+              onClick={() => slider.current.next()}
+            />
+          </div>
+          <div className="mt-4 flex w-2/3 justify-center">
+            <Button
+              style={{ display: currentVideoIndex === 0 ? "none" : "block" }}
+              icon={<LeftOutlined />}
+              onClick={handlePreviousVideo}
+            />
+            <Button
+              style={{
+                display:
+                  currentVideoIndex ===
+                  vocabularyModal.vocabulary?.vocabularyVideoResList?.length - 1
+                    ? "none"
+                    : "block",
+              }}
+              icon={<RightOutlined />}
+              onClick={handleNextVideo}
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex w-full justify-center gap-3">
+          <ButtonPrimary disabled={fileIndex === 0} onClick={handlePrev}>
+            Previous (Lùi lại)
+          </ButtonPrimary>
+          <ButtonPrimary
+            disabled={fileIndex === allVocabulary?.length - 1}
+            onClick={handleNext}
+          >
+            Next (Kế tiếp)
+          </ButtonPrimary>
+        </div>
+      </Modal>
     </Spin>
   );
 };
 
 export default Vocabulary;
-
-
-// "use client";
-// import { SearchIcon } from "@/assets/icons";
-// import StudyComponent from "@/components/Study/StudyComponent";
-// import InputPrimary from "@/components/UI/Input/InputPrimary";
-// import Learning from "@/model/Learning";
-// import { RootState } from "@/store";
-// import { useQuery } from "@tanstack/react-query";
-// import { Spin, message } from "antd";
-// import { FC, useState } from "react";
-// import { useSelector } from "react-redux";
-
-// export interface SectionHero2Props {
-//   className?: string;
-// }
-
-// const Vocabulary: FC<SectionHero2Props> = ({ className = "" }) => {
-//   const user: User = useSelector((state: RootState) => state.admin);
-
-//   //value search
-//   const [filterParams, setFilerParams] = useState<{
-//     topicId?: number;
-//     isPrivate?: boolean;
-//     vocabularyType?: string;
-//     contentSearch?: string;
-//   }>({});
-
-//   // API lấy danh sách từ khi tìm kiếm
-//   const { data: allVocabulary, isFetching } = useQuery({
-//     queryKey: ["searchVocabulary", filterParams],
-//     queryFn: async () => {
-//       const res = await Learning.getAllVocabulary({
-//         ...filterParams,
-//         vocabularyType: "WORD",
-//         isPrivate: user.role === "USER" && "false",
-//       });
-//       if (!res?.data?.length) {
-//         message.warning("Không có kết quả tìm kiếm");
-//         return;
-//       }
-//       // Sắp xếp priamry lên đầu
-//       res?.data?.forEach(
-//         (item: {
-//           vocabularyImageResList: any[];
-//           vocabularyVideoResList: any[];
-//         }) => {
-//           item.vocabularyImageResList?.sort(
-//             (a: { primary: any }, b: { primary: any }) => {
-//               // Sắp xếp sao cho phần tử có primary = true được đặt lên đầu
-//               return a.primary === b.primary ? 0 : a.primary ? -1 : 1;
-//             },
-//           );
-//           item.vocabularyVideoResList?.sort(
-//             (a: { primary: any }, b: { primary: any }) => {
-//               // Sắp xếp sao cho phần tử có primary = true được đặt lên đầu
-//               return a.primary === b.primary ? 0 : a.primary ? -1 : 1;
-//             },
-//           );
-//         },
-//       );
-//       return (res.data as Vocabulary[]) || [];
-//     },
-//   });
-
-//   return (
-//     <Spin spinning={isFetching}>
-//       <div className="flex w-full gap-4">
-//         <InputPrimary
-//           allowClear
-//           className="relative mb-4"
-//           style={{ width: 400 }}
-//           placeholder="Tìm kiếm từ vựng"
-//           value={filterParams?.contentSearch}
-//           onChange={(e) => {
-//             setFilerParams({
-//               ...filterParams,
-//               contentSearch: e.target.value,
-//             });
-//           }}
-//           onKeyDown={(e) => {
-//             if (e.key === "Enter") {
-//               setFilerParams({
-//                 ...filterParams,
-//                 contentSearch: e.currentTarget.value,
-//               });
-//             }
-//           }}
-//           suffixIcon={<SearchIcon size={24} />}
-//           onSuffixClick={(value) => {
-//             setFilerParams({ ...filterParams, contentSearch: value });
-//           }}
-//           onClear={() => {
-//             setFilerParams({ ...filterParams, contentSearch: "" });
-//           }}
-//         />
-//       </div>
-
-//       <StudyComponent allVocabulary={allVocabulary} />
-//     </Spin>
-//   );
-// };
-
-// export default Vocabulary;
