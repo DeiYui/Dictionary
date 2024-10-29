@@ -1,14 +1,14 @@
 "use client";
-import { RootState } from "@/store";
 import { useQuery } from "@tanstack/react-query";
-import { Spin, message, Table, Select, Input, Image, Modal, Button, Carousel } from "antd";
-import { FC, useState, useCallback, useRef, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { Table, message, Select, Input, Spin, Modal, Image, Button, Carousel } from "antd";
+import { FC, useEffect, useState, useCallback, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { debounce } from "lodash";
-import { EyeOutlined, LeftOutlined, RightOutlined, SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, EyeOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import Learning from "@/model/Learning";
 import styled from "styled-components";
 import ButtonPrimary from "@/components/UI/Button/ButtonPrimary";
+import { Vocabulary } from "@/types";
 
 const CustomSlider = styled(Carousel)`
   &.ant-carousel {
@@ -26,20 +26,18 @@ const TYPE_VOCABULARY = {
   PARAGRAPH: "PARAGRAPH",
 };
 
-export interface SectionHero2Props {
-  className?: string;
-}
+const VocabularyTopic: FC = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const initialTopicId = searchParams.get("topicId");
 
-const Vocabulary: FC<SectionHero2Props> = ({ className = "" }) => {
-  const user: User = useSelector((state: RootState) => state.admin);
-
-  //value search
-  const [filterParams, setFilerParams] = useState<{
+  const [filterParams, setFilterParams] = useState<{
     topicId?: number;
-    isPrivate?: boolean;
-    vocabularyType?: string;
     contentSearch?: string;
-  }>({});
+    vocabularyType?: string;
+  }>({
+    topicId: initialTopicId ? parseInt(initialTopicId) : undefined,
+  });
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -129,8 +127,8 @@ const Vocabulary: FC<SectionHero2Props> = ({ className = "" }) => {
     setVocabularyModal({ open: false, vocabulary: null });
   };
 
-  // API lấy danh sách topics
-  const { data: allTopics } = useQuery({
+  // Fetch all topics
+  const { data: allTopics, isFetching: isFetchingTopics } = useQuery({
     queryKey: ["getAllTopics"],
     queryFn: async () => {
       const res = await Learning.getAllTopics();
@@ -143,51 +141,24 @@ const Vocabulary: FC<SectionHero2Props> = ({ className = "" }) => {
     },
   });
 
-  // Set the default topic to "Từ điển chung"
-  useEffect(() => {
-    if (allTopics) {
-      const defaultTopic = allTopics.find((topic) => topic.label === "Từ điển chung");
-      if (defaultTopic) {
-        setFilerParams((prevParams) => ({
-          ...prevParams,
-          topicId: defaultTopic.id,
-        }));
-      }
-    }
-  }, [allTopics]);
+  // Filter out "Tu dien chung" topic and add "All" option
+  const filteredTopics = [
+    { id: 0, value: 0, label: "Tất cả", text: "Tất cả" },
+    ...(allTopics ? allTopics.filter(topic => topic.label !== "Tu dien chung") : []),
+  ];
 
-  // API lấy danh sách từ khi tìm kiếm
-const { data: allVocabulary, isFetching, refetch } = useQuery({
+  // Fetch vocabulary data based on filterParams
+const { data: allVocabulary, isFetching } = useQuery({
   queryKey: ["searchVocabulary", filterParams],
   queryFn: async () => {
     const res = await Learning.getAllVocabulary({
       ...filterParams,
-      isPrivate: user.role === "USER" && "false",
+      topicId: filterParams.topicId === 0 ? undefined : filterParams.topicId, // Handle "All"
     });
     if (!res?.data?.length) {
       message.warning("Không có kết quả tìm kiếm");
       return [];
     }
-    // Sắp xếp priamry lên đầu
-    res?.data?.forEach(
-      (item: {
-        vocabularyImageResList: any[];
-        vocabularyVideoResList: any[];
-      }) => {
-        item.vocabularyImageResList?.sort(
-          (a: { primary: any }, b: { primary: any }) => {
-            // Sắp xếp sao cho phần tử có primary = true được đặt lên đầu
-            return a.primary === b.primary ? 0 : a.primary ? -1 : 1;
-          },
-        );
-        item.vocabularyVideoResList?.sort(
-          (a: { primary: any }, b: { primary: any }) => {
-            // Sắp xếp sao cho phần tử có primary = true được đặt lên đầu
-            return a.primary === b.primary ? 0 : a.primary ? -1 : 1;
-          },
-        );
-      },
-    );
     // Sort the vocabulary data alphabetically by content
     res.data.sort((a: { content: string }, b: { content: string }) => {
       return a.content.localeCompare(b.content);
@@ -305,7 +276,7 @@ const { data: allVocabulary, isFetching, refetch } = useQuery({
             />
           );
         } else {
-          return <span>Không video có minh họa</span>;
+          return <span>Không có video minh hoạ</span>;
         }
       },
       width: 200,
@@ -314,29 +285,32 @@ const { data: allVocabulary, isFetching, refetch } = useQuery({
 
   const handleSearch = useCallback(
     debounce((searchText: string) => {
-      setFilerParams({ ...filterParams, contentSearch: searchText });
+      setFilterParams({ ...filterParams, contentSearch: searchText });
     }, 300),
     [filterParams],
   );
 
-  const isLoading = isFetching;
+  const isLoading = isFetching || isFetchingTopics;
 
   return (
     <Spin spinning={isLoading}>
-      <h1 className="mb-4 text-2xl font-bold">Danh sách từ điển học liệu</h1>
+      <h1 className="mb-4 text-2xl font-bold">Danh sách từ điển bài học</h1>
       <div className="flex w-full gap-4 mb-4">
         <Select
-          placeholder="Từ điển chung"
+          placeholder="Chọn chủ đề"
           style={{ width: 200 }}
-          options={allTopics}
+          options={filteredTopics}
           value={filterParams.topicId}
-          onChange={(value) => setFilerParams({ ...filterParams, topicId: value })}
-          disabled // Disable the selection
+          onChange={(value) => {
+            setFilterParams({ ...filterParams, topicId: value });
+            router.push(`/study/topics/vocabularytopic?topicId=${value}`);
+          }}
         />
         <Select
           placeholder="Loại từ vựng"
           style={{ width: 200 }}
-          onChange={(value) => setFilerParams({ ...filterParams, vocabularyType: value })}
+          value={filterParams.vocabularyType}
+          onChange={(value) => setFilterParams({ ...filterParams, vocabularyType: value })}
         >
           <Select.Option value="WORD">Từ</Select.Option>
           <Select.Option value="SENTENCE">Câu</Select.Option>
@@ -347,7 +321,7 @@ const { data: allVocabulary, isFetching, refetch } = useQuery({
           style={{ width: 400 }}
           value={filterParams?.contentSearch}
           onChange={(e) => {
-            setFilerParams({
+            setFilterParams({
               ...filterParams,
               contentSearch: e.target.value,
             });
@@ -355,7 +329,7 @@ const { data: allVocabulary, isFetching, refetch } = useQuery({
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              setFilerParams({
+              setFilterParams({
                 ...filterParams,
                 contentSearch: e.currentTarget.value,
               });
@@ -557,4 +531,4 @@ const { data: allVocabulary, isFetching, refetch } = useQuery({
   );
 };
 
-export default Vocabulary;
+export default VocabularyTopic;

@@ -2,11 +2,12 @@
 import { default as Learning } from "@/model/Learning";
 import { RootState } from "@/store";
 import { useQuery } from "@tanstack/react-query";
-import { Input, Select, Spin, Table, Modal, Image } from "antd";
+import { Input, Select, Spin, Table, Modal, Image, Button, message } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import { FC, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Topic, User, Vocabulary } from "@/types";
+import { useSearchParams, useRouter } from "next/navigation"; // Import useSearchParams and useRouter
 
 export interface SectionHero2Props {
   className?: string;
@@ -14,9 +15,11 @@ export interface SectionHero2Props {
 
 const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
   const user: User | null = useSelector((state: RootState) => state.admin);
-
+  const searchParams = useSearchParams(); // Initialize useSearchParams
+  const router = useRouter(); // Initialize useRouter
+  const pageSize = 10;
   const [searchText, setSearchText] = useState<string>("");
-  const [selectedClass, setSelectedClass] = useState<string | undefined>(undefined);
+  const [selectedClass, setSelectedClass] = useState<string | undefined>(searchParams.get("className") || undefined); // Get initial class from query
   const [filteredTopics, setFilteredTopics] = useState<Topic[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [modalPreview, setModalPreview] = useState<{
@@ -43,6 +46,10 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
       });
       return res.data as Topic[];
     },
+    onError: (error) => {
+      message.error("Failed to fetch topics");
+      console.error("Error fetching topics:", error);
+    },
   });
 
   // API lấy danh sách lớp
@@ -50,33 +57,48 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
     queryKey: ["getListClass"],
     queryFn: async () => {
       const res = await Learning.getListClass();
-      return res.data.map((cls: { classRoomId: number; content: string }) => ({
-        value: cls.classRoomId,
+      return res.data.map((cls: { classRoomId: number; content: string; teacherName: string }) => ({
+        value: cls.content, // Use class name as value
         label: cls.content,
+        teacherName: cls.teacherName, // Include teacherName
       }));
+    },
+    onError: (error) => {
+      message.error("Failed to fetch classes");
+      console.error("Error fetching classes:", error);
     },
   });
 
   useEffect(() => {
-    if (allTopics) {
-      let filtered = allTopics;
+    if (allTopics && allClasses) {
+      let filtered = allTopics.map((topic) => {
+        const classInfo = allClasses.find((cls) => cls.value === topic.classRoomContent);
+        return {
+          ...topic,
+          teacherName: classInfo ? classInfo.teacherName : "",
+        };
+      });
+
       if (searchText) {
         filtered = filtered.filter((topic) =>
           topic.content.toLowerCase().includes(searchText.toLowerCase())
         );
       }
       if (selectedClass) {
-        filtered = filtered.filter((topic) => topic.classRoomId === Number(selectedClass));
+        filtered = filtered.filter((topic) => topic.classRoomContent === selectedClass);
       }
-      setFilteredTopics(filtered);
+      setFilteredTopics(
+        filtered.sort((a, b) => (a.content || "").localeCompare(b.content || ""))
+      );
     }
-  }, [searchText, selectedClass, allTopics]);
+  }, [searchText, selectedClass, allTopics, allClasses]);
 
   const columns = [
     {
       title: "STT",
       key: "index",
-      render: (_: any, __: any, index: number) => (currentPage - 1) * 10 + index + 1,
+      render: (_: any, __: any, index: number) =>
+        (currentPage - 1) * pageSize + index + 1,
       width: 50,
     },
     {
@@ -86,11 +108,13 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
       render: (value: string, record: Topic) => (
         <div
           className="text-lg cursor-pointer text-blue-500"
-          onClick={() => setVocabularyModal({ open: true, topicId: record.topicId })}
+          onClick={() => router.push(`/study/topics/vocabularytopic?topicId=${record.topicId}`)} // Navigate to VocabularyTopic with topic ID
         >
           {value}
         </div>
       ),
+      sorter: (a: Topic, b: Topic) => (a.content || "").localeCompare(b.content || ""),
+      defaultSortOrder: 'ascend', // Always sort by A-Z
     },
     {
       title: "Minh họa",
@@ -121,6 +145,12 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
       key: "classRoomContent",
       render: (value: string) => <div className="text-lg">{value}</div>,
     },
+    {
+      title: "Tên giáo viên",
+      dataIndex: "teacherName",
+      key: "teacherName",
+      render: (value: string) => <div className="text-lg">{value}</div>,
+    },
   ];
 
   const handleTableChange = (pagination: any) => {
@@ -135,6 +165,10 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
       return res.data as Vocabulary[];
     },
     enabled: vocabularyModal.open,
+    onError: (error) => {
+      message.error("Failed to fetch vocabulary");
+      console.error("Error fetching vocabulary:", error);
+    },
   });
 
   const vocabularyColumns = [
@@ -245,7 +279,7 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
             />
           );
         } else {
-          return <span>Không video có minh họa</span>;
+          return <span>Không có video minh hoạ</span>;
         }
       },
       width: 200,
@@ -269,8 +303,16 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
             placeholder="Lọc theo lớp"
             allowClear
             options={allClasses}
+            value={selectedClass} // Set the value of the Select component
             onChange={(value) => setSelectedClass(value)}
           />
+          <Button
+            type="primary"
+            style={{ backgroundColor: "#9b59b6", borderColor: "#9b59b6" }}
+            onClick={() => router.push(`/study/topics/vocabularytopic?topicId=0`)}
+          >
+            Từ điển bài học
+          </Button>
         </div>
       </div>
       <Table
@@ -303,8 +345,13 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
             columns={vocabularyColumns}
             dataSource={vocabularyList}
             pagination={{
-              pageSize: 10,
+              pageSize: pageSize,
+              current: currentPage,
+              onChange: handleTableChange,
+              showSizeChanger: false,
+              position: ["bottomCenter"],
             }}
+            onChange={handleTableChange}
             rowKey="vocabularyId"
           />
         </Spin>
