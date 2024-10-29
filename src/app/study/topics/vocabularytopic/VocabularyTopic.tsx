@@ -35,6 +35,7 @@ const VocabularyTopic: FC = () => {
     topicId?: number;
     contentSearch?: string;
     vocabularyType?: string;
+    classRoomId?: number;
   }>({
     topicId: initialTopicId ? parseInt(initialTopicId) : undefined,
   });
@@ -141,6 +142,18 @@ const VocabularyTopic: FC = () => {
     },
   });
 
+  // Fetch all classes
+  const { data: allClasses, isFetching: isFetchingClasses } = useQuery({
+    queryKey: ["getListClass"],
+    queryFn: async () => {
+      const res = await Learning.getListClass();
+      return res.data?.map((item: { content: any; classRoomId: any }) => ({
+        label: item.content,
+        value: item.classRoomId,
+      }));
+    },
+  });
+
   // Filter out "Tu dien chung" topic and add "All" option
   const filteredTopics = [
     { id: 0, value: 0, label: "Tất cả", text: "Tất cả" },
@@ -148,24 +161,34 @@ const VocabularyTopic: FC = () => {
   ];
 
   // Fetch vocabulary data based on filterParams
-const { data: allVocabulary, isFetching } = useQuery({
-  queryKey: ["searchVocabulary", filterParams],
-  queryFn: async () => {
-    const res = await Learning.getAllVocabulary({
-      ...filterParams,
-      topicId: filterParams.topicId === 0 ? undefined : filterParams.topicId, // Handle "All"
-    });
-    if (!res?.data?.length) {
-      message.warning("Không có kết quả tìm kiếm");
-      return [];
-    }
-    // Sort the vocabulary data alphabetically by content
-    res.data.sort((a: { content: string }, b: { content: string }) => {
-      return a.content.localeCompare(b.content);
-    });
-    return res.data;
-  },
-});
+  const { data: allVocabulary, isFetching } = useQuery({
+    queryKey: ["searchVocabulary", filterParams],
+    queryFn: async () => {
+      const res = await Learning.getAllVocabulary({
+        ...filterParams,
+        topicId: filterParams.topicId === 0 ? undefined : filterParams.topicId, // Handle "All"
+      });
+      if (!res?.data?.length) {
+        message.warning("Không có kết quả tìm kiếm");
+        return [];
+      }
+      // Sort the vocabulary data alphabetically by content
+      res.data.sort((a: { content: string }, b: { content: string }) => {
+        return a.content.localeCompare(b.content);
+      });
+      return res.data
+        .filter((item: any) => item.topicContent !== "Từ điển chung") // Filter out "Từ điển chung"
+        .map((item: any) => {
+          // Extract class name from topicContent
+          const topicParts = item.topicContent.split('_');
+          const className = topicParts.length > 1 ? topicParts[0] : "Unknown Class"; // Ensure class name is derived correctly
+          return {
+            ...item,
+            classRoomContent: className, // Ensure the class name is correctly mapped
+          };
+        });
+    },
+  });
 
   const columns = [
     {
@@ -217,6 +240,16 @@ const { data: allVocabulary, isFetching } = useQuery({
       width: 100,
     },
     {
+      title: "Lớp",
+      dataIndex: "classRoomContent",
+      key: "classRoomContent",
+      render: (content: string) => (
+        <span style={{ fontWeight: 500 }}>{content}</span>
+      ),
+      ellipsis: true,
+      width: 200,
+    },
+    {
       title: "Ảnh minh hoạ",
       dataIndex: "imageLocation",
       key: "imageLocation",
@@ -245,7 +278,7 @@ const { data: allVocabulary, isFetching } = useQuery({
             />
           );
         } else {
-          return <span>Không có minh họa</span>;
+          return <span>Không có minh hoạ</span>;
         }
       },
       width: 120,
@@ -290,11 +323,11 @@ const { data: allVocabulary, isFetching } = useQuery({
     [filterParams],
   );
 
-  const isLoading = isFetching || isFetchingTopics;
+  const isLoading = isFetching || isFetchingTopics || isFetchingClasses;
 
   return (
     <Spin spinning={isLoading}>
-      <h1 className="mb-4 text-2xl font-bold">Danh sách từ điển bài học</h1>
+      <h1 className="mb-4 text-2xl font-bold">Nội dung chủ đề, bài học</h1>
       <div className="flex w-full gap-4 mb-4">
         <Select
           placeholder="Chọn chủ đề"
@@ -316,6 +349,13 @@ const { data: allVocabulary, isFetching } = useQuery({
           <Select.Option value="SENTENCE">Câu</Select.Option>
           <Select.Option value="PARAGRAPH">Đoạn</Select.Option>
         </Select>
+        <Select
+          placeholder="Chọn lớp"
+          style={{ width: 200 }}
+          options={allClasses}
+          value={filterParams.classRoomId}
+          onChange={(value) => setFilterParams({ ...filterParams, classRoomId: value })}
+        />
         <Input
           placeholder="Nhập từ vựng"
           style={{ width: 400 }}
@@ -498,7 +538,13 @@ const { data: allVocabulary, isFetching } = useQuery({
           </div>
           <div className="mt-4 flex w-2/3 justify-center">
             <Button
-              style={{ display: currentVideoIndex === 0 ? "none" : "block" }}
+              style={{
+                display:
+                  currentVideoIndex ===
+                  vocabularyModal.vocabulary?.vocabularyVideoResList?.length - 1
+                    ? "none"
+                    : "block",
+              }}
               icon={<LeftOutlined />}
               onClick={handlePreviousVideo}
             />

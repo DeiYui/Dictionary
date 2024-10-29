@@ -50,13 +50,13 @@ export const MenuSystem = () => {
           hidden: false,
           icon: <DotIcon color="white" size={20} />,
         },
-        // {
-        //   key: "/study/topics",
-        //   label: "Chủ đề",
-        //   path: "/study/topics",
-        //   hidden: false,
-        //   icon: <DotIcon color="white" size={20} />,
-        // },
+        {
+          key: "/study/topics",
+          label: "Chủ đề",
+          path: "/study/topics",
+          hidden: false,
+          icon: <DotIcon color="white" size={20} />,
+        },
         {
           key: "/study/vocabulary",
           label: "Từ điển học liệu",

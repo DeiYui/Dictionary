@@ -102,6 +102,12 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
       width: 50,
     },
     {
+      title: "Lớp",
+      dataIndex: "classRoomContent",
+      key: "classRoomContent",
+      render: (value: string) => <div className="text-lg">{value}</div>,
+    },
+    {
       title: "Tên chủ đề",
       dataIndex: "content",
       key: "content",
@@ -124,7 +130,7 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
         <>
           {text ? (
             <EyeOutlined
-              style={{ fontSize: "1.5rem", marginLeft: 8 }}
+              style={{ fontSize: "1.5rem", alignSelf: "center"}}
               onClick={() =>
                 setModalPreview({
                   open: true,
@@ -138,12 +144,6 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
         </>
       ),
       width: 200,
-    },
-    {
-      title: "Lớp",
-      dataIndex: "classRoomContent",
-      key: "classRoomContent",
-      render: (value: string) => <div className="text-lg">{value}</div>,
     },
     {
       title: "Tên giáo viên",
