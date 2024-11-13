@@ -1,11 +1,12 @@
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
+import Chart from "@/components/Charts/page";
 import { Metadata } from "next";
+import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import React from "react";
-import VocabularyTopic from "./VocabularyTopic";
+import LessonList from "./LessonList";
 
 export const metadata: Metadata = {
-  title: "LearnVocabulary - Dictionary",
-  description: "LearnVocabulary page for We_sign",
+  title: "Management-class  - Dictionary",
+  description: "Management-class page for We_sign",
   icons: {
     icon: [
       {
@@ -22,12 +23,12 @@ export const metadata: Metadata = {
   },
 };
 
-const LearnVocabulary = () => {
+const ManagementClassPage: React.FC = () => {
   return (
     <DefaultLayout>
-      <VocabularyTopic />
+      <LessonList />
     </DefaultLayout>
   );
 };
 
-export default LearnVocabulary;
+export default ManagementClassPage;

@@ -34,7 +34,7 @@ const Vocabulary: FC<SectionHero2Props> = ({ className = "" }) => {
   const user: User = useSelector((state: RootState) => state.admin);
 
   //value search
-  const [filterParams, setFilerParams] = useState<{
+  const [filterParams, setFilterParams] = useState<{
     topicId?: number;
     isPrivate?: boolean;
     vocabularyType?: string;
@@ -143,58 +143,45 @@ const Vocabulary: FC<SectionHero2Props> = ({ className = "" }) => {
     },
   });
 
-  // Set the default topic to "Từ điển chung"
-  useEffect(() => {
-    if (allTopics) {
-      const defaultTopic = allTopics.find((topic) => topic.label === "Từ điển chung");
-      if (defaultTopic) {
-        setFilerParams((prevParams) => ({
-          ...prevParams,
-          topicId: defaultTopic.id,
-        }));
-      }
-    }
-  }, [allTopics]);
-
   // API lấy danh sách từ khi tìm kiếm
-const { data: allVocabulary, isFetching, refetch } = useQuery({
-  queryKey: ["searchVocabulary", filterParams],
-  queryFn: async () => {
-    const res = await Learning.getAllVocabulary({
-      ...filterParams,
-      isPrivate: user.role === "USER" && "false",
-    });
-    if (!res?.data?.length) {
-      message.warning("Không có kết quả tìm kiếm");
-      return [];
-    }
-    // Sắp xếp priamry lên đầu
-    res?.data?.forEach(
-      (item: {
-        vocabularyImageResList: any[];
-        vocabularyVideoResList: any[];
-      }) => {
-        item.vocabularyImageResList?.sort(
-          (a: { primary: any }, b: { primary: any }) => {
-            // Sắp xếp sao cho phần tử có primary = true được đặt lên đầu
-            return a.primary === b.primary ? 0 : a.primary ? -1 : 1;
-          },
-        );
-        item.vocabularyVideoResList?.sort(
-          (a: { primary: any }, b: { primary: any }) => {
-            // Sắp xếp sao cho phần tử có primary = true được đặt lên đầu
-            return a.primary === b.primary ? 0 : a.primary ? -1 : 1;
-          },
-        );
-      },
-    );
-    // Sort the vocabulary data alphabetically by content
-    res.data.sort((a: { content: string }, b: { content: string }) => {
-      return a.content.localeCompare(b.content);
-    });
-    return res.data;
-  },
-});
+  const { data: allVocabulary, isFetching, refetch } = useQuery({
+    queryKey: ["searchVocabulary", filterParams],
+    queryFn: async () => {
+      const res = await Learning.getAllVocabulary({
+        ...filterParams,
+        isPrivate: user.role === "USER" && "false",
+      });
+      if (!res?.data?.length) {
+        message.warning("Không có kết quả tìm kiếm");
+        return [];
+      }
+      // Sắp xếp priamry lên đầu
+      res?.data?.forEach(
+        (item: {
+          vocabularyImageResList: any[];
+          vocabularyVideoResList: any[];
+        }) => {
+          item.vocabularyImageResList?.sort(
+            (a: { primary: any }, b: { primary: any }) => {
+              // Sắp xếp sao cho phần tử có primary = true được đặt lên đầu
+              return a.primary === b.primary ? 0 : a.primary ? -1 : 1;
+            },
+          );
+          item.vocabularyVideoResList?.sort(
+            (a: { primary: any }, b: { primary: any }) => {
+              // Sắp xếp sao cho phần tử có primary = true được đặt lên đầu
+              return a.primary === b.primary ? 0 : a.primary ? -1 : 1;
+            },
+          );
+        },
+      );
+      // Sort the vocabulary data alphabetically by content
+      res.data.sort((a: { content: string }, b: { content: string }) => {
+        return a.content.localeCompare(b.content);
+      });
+      return res.data;
+    },
+  });
 
   const columns = [
     {
@@ -314,7 +301,7 @@ const { data: allVocabulary, isFetching, refetch } = useQuery({
 
   const handleSearch = useCallback(
     debounce((searchText: string) => {
-      setFilerParams({ ...filterParams, contentSearch: searchText });
+      setFilterParams({ ...filterParams, contentSearch: searchText });
     }, 300),
     [filterParams],
   );
@@ -326,17 +313,16 @@ const { data: allVocabulary, isFetching, refetch } = useQuery({
       <h1 className="mb-4 text-2xl font-bold">Danh sách từ điển học liệu</h1>
       <div className="flex w-full gap-4 mb-4">
         <Select
-          placeholder="Từ điển chung"
+          placeholder="Chọn chủ đề"
           style={{ width: 200 }}
           options={allTopics}
           value={filterParams.topicId}
-          onChange={(value) => setFilerParams({ ...filterParams, topicId: value })}
-          disabled // Disable the selection
+          onChange={(value) => setFilterParams({ ...filterParams, topicId: value })}
         />
         <Select
           placeholder="Loại từ vựng"
           style={{ width: 200 }}
-          onChange={(value) => setFilerParams({ ...filterParams, vocabularyType: value })}
+          onChange={(value) => setFilterParams({ ...filterParams, vocabularyType: value })}
         >
           <Select.Option value="WORD">Từ</Select.Option>
           <Select.Option value="SENTENCE">Câu</Select.Option>
@@ -347,7 +333,7 @@ const { data: allVocabulary, isFetching, refetch } = useQuery({
           style={{ width: 400 }}
           value={filterParams?.contentSearch}
           onChange={(e) => {
-            setFilerParams({
+            setFilterParams({
               ...filterParams,
               contentSearch: e.target.value,
             });
@@ -355,7 +341,7 @@ const { data: allVocabulary, isFetching, refetch } = useQuery({
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              setFilerParams({
+              setFilterParams({
                 ...filterParams,
                 contentSearch: e.currentTarget.value,
               });

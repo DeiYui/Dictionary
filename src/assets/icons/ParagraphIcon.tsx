@@ -17,7 +17,6 @@ export const ParagraphIcon: React.FC<IconProps> = ({
         stroke={color}
         stroke-linecap="round"
         stroke-linejoin="round"
-        stroke-width="4"
       >
         <path d="M24 9H42" />
         <path d="M24 19H42" />

@@ -51,9 +51,9 @@ export const MenuSystem = () => {
           icon: <DotIcon color="white" size={20} />,
         },
         {
-          key: "/study/topics",
-          label: "Chủ đề",
-          path: "/study/topics",
+          key: "/study/lesson",
+          label: "Bài học",
+          path: "/study/lesson",
           hidden: false,
           icon: <DotIcon color="white" size={20} />,
         },

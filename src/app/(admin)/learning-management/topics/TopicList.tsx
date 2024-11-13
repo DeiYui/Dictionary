@@ -1,75 +1,52 @@
 "use client";
+import React, { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Button, Form, Input, Select, Table, message, Upload, Image } from "antd";
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import { CloseIcon } from "@/assets/icons";
-import InputPrimary from "@/components/UI/Input/InputPrimary";
 import BasicDrawer from "@/components/UI/draw/BasicDraw";
+import InputPrimary from "@/components/UI/Input/InputPrimary";
 import Learning from "@/model/Learning";
 import UploadModel from "@/model/UploadModel";
 import { validateRequireInput } from "@/utils/validation/validtor";
-import {
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  Button,
-  Form,
-  Image,
-  Input,
-  Popover,
-  Select,
-  Table,
-  Upload,
-  UploadProps,
-  message,
-} from "antd";
-import { useForm } from "antd/es/form/Form";
-import React, { useState } from "react";
-import { CustomTable } from "../check-list/ExamList";
-import styled from "styled-components";
-import { getNumberFromContent } from "../class/ClassList";
 
 interface Topic {
-  topicId?: number;
+  topicName?: string;
   content: string;
   imageLocation: string;
   videoLocation?: string;
+  classRoomContent: string;
 }
 
-const TopicList = (props: any) => {
-  const { isPrivate } = props;
-  const [form] = useForm();
-  // danh sách topics
-  const [lstTopics, setLstTopics] = useState([]);
+const TopicList: React.FC<{ isPrivate: boolean }> = ({ isPrivate }) => {
+  const [form] = Form.useForm();
+  const [lstTopics, setLstTopics] = useState<Topic[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState("");
-  const pageSize = 10;
-  // Modal thêm mới
-  const [modalCreate, setModalCreate] = useState<{
-    open: boolean;
-    file: string;
-    typeModal: string;
-    type?: string;
-  }>({
+  const [modalCreate, setModalCreate] = useState({
     open: false,
     file: "",
     typeModal: "create",
     type: "topic",
   });
-
-  // filter params
-  const [filterParams, setFilterParams] = useState<{
-    classRoomId: number;
-  }>({
-    classRoomId: 0,
-  });
+  const [filterParams, setFilterParams] = useState({ classRoomContent: "" });
+  const pageSize = 10;
 
   const handleTableChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
-  // API lấy danh sách topics
+  const { data: allClass, isFetching: isFetchingClass } = useQuery({
+    queryKey: ["getListClass"],
+    queryFn: async () => {
+      const res = await Learning.getListClass();
+      return res.data.map((item: { content: string }) => ({
+        label: item.content,
+        value: item.content,
+      }));
+    },
+  });
+
   const { isFetching, refetch } = useQuery({
     queryKey: ["getAllTopics", filterParams],
     queryFn: async () => {
@@ -82,91 +59,24 @@ const TopicList = (props: any) => {
     },
   });
 
-  // API lấy danh sách lớp học
-  const { data: allClass, isFetching: isFetchingClass } = useQuery({
-    queryKey: ["getListClass"],
-    queryFn: async () => {
-      const res = await Learning.getListClass();
+  useEffect(() => {
+    refetch();
+  }, [filterParams]);
 
-      res.data?.sort((a: { content: string }, b: { content: any }) => {
-        const numA = getNumberFromContent(a.content);
-        const numB = getNumberFromContent(b.content);
-
-        if (numA !== null && numB !== null) {
-          return numA - numB;
-        } else if (numA !== null) {
-          return -1;
-        } else if (numB !== null) {
-          return 1;
-        } else {
-          return a.content.localeCompare(b.content);
-        }
-      });
-      return res.data?.map((item: { content: any; classRoomId: any }) => ({
-        label: item.content,
-        value: item.classRoomId,
-      }));
-    },
-  });
-
-  // API lấy danh sách lớp
-  const { data: optionClass } = useQuery({
-    queryKey: ["getOptionClass", modalCreate.type],
-    queryFn: async () => {
-      const res = await Learning.getListClass();
-      res.data?.sort((a: { content: string }, b: { content: any }) => {
-        const numA = getNumberFromContent(a.content);
-        const numB = getNumberFromContent(b.content);
-
-        if (numA !== null && numB !== null) {
-          return numA - numB;
-        } else if (numA !== null) {
-          return -1;
-        } else if (numB !== null) {
-          return 1;
-        } else {
-          return a.content.localeCompare(b.content);
-        }
-      });
-      return res.data?.map((e: { content: any; classRoomId: any }) => ({
-        label: e.content,
-        value: e.classRoomId,
-      }));
-    },
-    enabled: modalCreate.type === "class",
-  });
-
-  // Tìm kiếm
-  const mutation = useMutation({
-    mutationFn: Learning.searchTopics,
-    onSuccess: (res) => {
-      setLstTopics(res.data.data);
-    },
-  });
-
-  // Thêm mới / chỉnh sửa topics
   const mutationCreateUpdate = useMutation({
-    mutationFn:
-      modalCreate.typeModal === "create"
-        ? Learning.addTopics
-        : Learning.editTopics,
-    onSuccess: (res) => {
+    mutationFn: modalCreate.typeModal === "create" ? Learning.addTopics : Learning.editTopics,
+    onSuccess: () => {
       message.success(
-        `${
-          modalCreate.typeModal === "create"
-            ? "Thêm mới thành công"
-            : "Cập nhật thành công"
-        }`,
+        `${modalCreate.typeModal === "create" ? "Thêm mới thành công" : "Cập nhật thành công"}`
       );
       refetch();
       setModalCreate({ ...modalCreate, open: false, file: "" });
     },
-    onError: (err) => {
-      message.success("Đã có lỗi sảy ra. Vui lòng thử lại sau");
+    onError: () => {
+      message.error("Đã có lỗi sảy ra. Vui lòng thử lại sau");
     },
   });
 
-  // Xoá chủ đề
   const mutationDel = useMutation({
     mutationFn: Learning.deleteTopics,
     onSuccess: () => {
@@ -175,15 +85,13 @@ const TopicList = (props: any) => {
     },
   });
 
-  // Upload file
   const uploadFileMutation = useMutation({
     mutationFn: UploadModel.uploadFile,
-    onSuccess: async (res: any) => {
+    onSuccess: (res: any) => {
       form.setFieldValue("file", res);
       setModalCreate({ ...modalCreate, file: res });
     },
-    onError: (error: Error) => {
-      console.error(error);
+    onError: () => {
       message.error("File đã được lưu trước đó");
     },
   });
@@ -192,8 +100,7 @@ const TopicList = (props: any) => {
     {
       title: "STT",
       key: "index",
-      render: (_: any, __: any, index: number) =>
-        (currentPage - 1) * pageSize + index + 1,
+      render: (_: any, __: any, index: number) => (currentPage - 1) * pageSize + index + 1,
       width: 50,
     },
     {
@@ -208,11 +115,7 @@ const TopicList = (props: any) => {
       key: "image",
       render: (text: string) => (
         <>
-          {text ? (
-            <Image src={text} alt="" />
-          ) : (
-            <div className="">Không có ảnh minh hoạ</div>
-          )}
+          {text ? <Image src={text} alt="" /> : <div className="">Không có ảnh minh hoạ</div>}
         </>
       ),
       width: 200,
@@ -225,8 +128,8 @@ const TopicList = (props: any) => {
     },
     {
       title: "Hành động",
-      key: "topicId",
-      dataIndex: "topicId",
+      key: "topicName",
+      dataIndex: "topicName",
       render: (value: any, record: any) => (
         <div className="flex space-x-2">
           <Button
@@ -235,27 +138,23 @@ const TopicList = (props: any) => {
               form.setFieldsValue({
                 ...record,
                 file: record.imageLocation,
+                classRoomContent: record.classRoomContent,
               });
               setModalCreate({
                 ...modalCreate,
                 open: true,
                 file: record.imageLocation,
                 typeModal: "edit",
-                type: record.classRoomId ? "class" : "topic",
+                type: "class",
               });
             }}
           />
-          <Button
-            icon={<DeleteOutlined />}
-            danger
-            onClick={() => mutationDel.mutate(value)}
-          />
+          <Button icon={<DeleteOutlined />} danger onClick={() => mutationDel.mutate(value)} />
         </div>
       ),
     },
   ];
 
-  //upload
   const uploadProps: UploadProps = {
     name: "file",
     onChange(info) {
@@ -285,7 +184,7 @@ const TopicList = (props: any) => {
   return (
     <div className="w-full p-4">
       <h1 className="mb-4 text-2xl font-bold">Danh sách chủ đề</h1>
-      <div className="mb-4 flex  items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <InputPrimary
             allowClear
@@ -298,66 +197,37 @@ const TopicList = (props: any) => {
             value={searchText}
             onChange={(e) => {
               setSearchText(e.target.value);
-
               if (e.target.value) {
                 mutation.mutate({
                   page: 1,
-                  size: 999999,
-                  text: e.currentTarget.value,
-                  ascending: true,
-                  orderBy: "",
+                  size: pageSize,
+                  search: e.target.value,
                 });
-              } else {
-                refetch();
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                if (e.currentTarget.value) {
-                  mutation.mutate({
-                    page: 1,
-                    size: 999999,
-                    text: e.currentTarget.value,
-                    ascending: true,
-                    orderBy: "",
-                  });
-                } else {
-                  refetch();
-                }
               }
             }}
           />
-          {/* Lớp */}
           <Select
-            allowClear
-            style={{ height: 44, width: 260 }}
-            size="large"
-            placeholder="Tìm kiếm chủ đề theo lớp học"
+            style={{ width: 200 }}
+            placeholder="Lọc theo lớp"
             options={allClass}
-            onChange={(value) =>
-              setFilterParams({ ...filterParams, classRoomId: value })
-            }
+            onChange={(value) => {
+              setFilterParams({ classRoomContent: value });
+            }}
           />
         </div>
-
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
-            setModalCreate({
-              ...modalCreate,
-              open: true,
-              typeModal: "create",
-              type: "class",
-            });
+            setModalCreate({ ...modalCreate, open: true, typeModal: "create" });
             form.resetFields();
           }}
         >
           Thêm mới
         </Button>
       </div>
-      <CustomTable
-        columns={columns as any}
+      <Table
+        columns={columns}
         dataSource={lstTopics}
         loading={isLoading}
         pagination={{
@@ -408,48 +278,19 @@ const TopicList = (props: any) => {
             form={form}
             layout="vertical"
             onFinish={(value) => {
-              let payload: any = {
+              mutationCreateUpdate.mutate({
+                topicName: value.topicName,
                 content: value.content,
                 imageLocation: value.file,
-                videoLocation: "",
-                private: isPrivate,
-              };
-
-              if (modalCreate.typeModal === "create") {
-                if (modalCreate.type === "topics") {
-                  mutationCreateUpdate.mutate(payload);
-                } else {
-                  payload.classRoomId = value.classRoomId;
-                  if (isPrivate) {
-                  }
-                  mutationCreateUpdate.mutate(payload);
-                }
-              } else {
-                payload.topicId = value?.topicId;
-                if (modalCreate.type === "topic") {
-                  mutationCreateUpdate.mutate(payload);
-                } else {
-                  payload.classRoomId = value.classRoomId;
-                  mutationCreateUpdate.mutate(payload);
-                }
-              }
+                videoLocation: value.video,
+                classRoomContent: value.classRoomContent,
+              });
             }}
           >
-            <Form.Item name="topicId" hidden />
             <Form.Item
-              hidden={modalCreate.type === "topic"}
-              name="classRoomId"
-              label="Lớp học"
-              className="mb-2"
-              required={isPrivate}
-              rules={
-                isPrivate && [
-                  validateRequireInput("Lớp học không được bỏ trống"),
-                ]
-              }
-            >
-              <Select options={optionClass} placeholder="Lựa chọn lớp học" />
-            </Form.Item>
+              name="topicName"
+              hidden
+            />
             <Form.Item
               name="content"
               label="Tên chủ đề"
@@ -459,29 +300,44 @@ const TopicList = (props: any) => {
             >
               <Input placeholder="Nhập tên chủ đề muốn thêm" />
             </Form.Item>
+            <Form.Item
+              name="classRoomContent"
+              label="Thuộc lớp"
+              className="mb-2"
+              required
+              rules={[{ required: true, message: "Lớp không được bỏ trống" }]}
+            >
+              <Select options={allClass} placeholder="Lựa chọn lớp" />
+            </Form.Item>
             <Form.Item name="file" label="Ảnh">
               <Upload {...uploadProps} showUploadList={false}>
-                <Button icon={<UploadOutlined />}>Tải file lên</Button>
+                <Button icon={<UploadOutlined />}>Tải ảnh lên</Button>
               </Upload>
             </Form.Item>
             <div className="flex w-full items-center justify-center">
               {modalCreate.file ? (
-                <div className="flex flex-col gap-2">
-                  <Image
-                    className=""
-                    src={modalCreate.file}
-                    alt="Ảnh chủ đề"
-                    style={{ width: 300 }}
-                  />
-                  <Button
-                    onClick={() => {
-                      setModalCreate({ ...modalCreate, file: "" });
-                      form.setFieldValue("file", "");
-                    }}
-                  >
-                    Xoá ảnh
-                  </Button>
-                </div>
+                <Image
+                  className=""
+                  src={modalCreate.file}
+                  alt="Ảnh chủ đề"
+                  style={{ width: 300 }}
+                />
+              ) : null}
+            </div>
+            <Form.Item name="video" label="Video">
+              <Upload {...uploadProps} showUploadList={false}>
+                <Button icon={<UploadOutlined />}>Tải video lên</Button>
+              </Upload>
+            </Form.Item>
+            <div className="flex w-full items-center justify-center">
+              {modalCreate.video ? (
+                <video
+                  key={modalCreate.video}
+                  controls
+                  style={{ width: 300 }}
+                >
+                  <source src={modalCreate.video} type="video/mp4" />
+                </video>
               ) : null}
             </div>
           </Form>
@@ -492,25 +348,3 @@ const TopicList = (props: any) => {
 };
 
 export default TopicList;
-
-export const PopoverButtonStyled = styled(Button)`
-  &.ant-btn-default {
-    background-color: unset;
-    border: none;
-    box-shadow: unset;
-    border-radius: 8px;
-    color: #181c25;
-    width: 100%;
-    display: flex;
-    height: 44px;
-    align-items: center;
-  }
-  &.ant-btn-default:not(:disabled):not(.ant-btn-disabled):hover {
-    background-color: #2a6aeb;
-    color: white;
-  }
-  &.ant-btn-default:not(:disabled):not(.ant-btn-disabled):active {
-    background-color: #c9dafb;
-    color: #0958d9;
-  }
-`;

@@ -114,13 +114,12 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
       render: (value: string, record: Topic) => (
         <div
           className="text-lg cursor-pointer text-blue-500"
-          onClick={() => router.push(`/study/topics/vocabularytopic?topicId=${record.topicId}`)} // Navigate to VocabularyTopic with topic ID
+          onClick={() => setVocabularyModal({ open: true, topicId: record.topicId })} // Open vocabulary modal
         >
           {value}
         </div>
       ),
-      sorter: (a: Topic, b: Topic) => (a.content || "").localeCompare(b.content || ""),
-      defaultSortOrder: 'ascend', // Always sort by A-Z
+
     },
     {
       title: "Minh họa",
@@ -291,13 +290,6 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
       <h1 className="mb-4 text-2xl font-bold">Danh sách chủ đề</h1>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Input
-            allowClear
-            style={{ width: 300 }}
-            placeholder="Tìm kiếm chủ đề"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
           <Select
             style={{ width: 200 }}
             placeholder="Lọc theo lớp"
@@ -306,13 +298,13 @@ const Topics: FC<SectionHero2Props> = ({ className = "" }) => {
             value={selectedClass} // Set the value of the Select component
             onChange={(value) => setSelectedClass(value)}
           />
-          <Button
-            type="primary"
-            style={{ backgroundColor: "#9b59b6", borderColor: "#9b59b6" }}
-            onClick={() => router.push(`/study/topics/vocabularytopic?topicId=0`)}
-          >
-            Từ điển bài học
-          </Button>
+          <Input
+            allowClear
+            style={{ width: 300 }}
+            placeholder="Tìm kiếm chủ đề"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
         </div>
       </div>
       <Table

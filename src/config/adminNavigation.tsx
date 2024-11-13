@@ -42,6 +42,13 @@ export const AdminSystem = (admin: any) => {
               hidden: false,
             },
             {
+              key: "/learning-management/lessons",
+              label: "Bài học",
+              path: "/learning-management/lessons",
+              hidden: false,
+              icon: <DotIcon color="white" size={20} />,
+            },
+            {
               key: "/learning-management/vocabulary",
               label: "Từ điển",
               path: "/learning-management/vocabulary",

@@ -1,57 +1,40 @@
-"use client";
+"use client"
+import React, { useCallback, useState } from "react";
+import { useSelector } from "react-redux";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Select, Button, Form, Image, Input, Upload, UploadProps, message } from "antd";
+import { useForm } from "antd/es/form/Form";
+import { debounce } from "lodash";
+import { RootState } from "@/store";
 import { CloseIcon } from "@/assets/icons";
 import InputPrimary from "@/components/UI/Input/InputPrimary";
 import BasicDrawer from "@/components/UI/draw/BasicDraw";
 import Learning from "@/model/Learning";
 import UploadModel from "@/model/UploadModel";
 import { validateRequireInput } from "@/utils/validation/validtor";
-import {
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  Button,
-  Form,
-  Image,
-  Input,
-  Upload,
-  UploadProps,
-  message,
-} from "antd";
-import { useForm } from "antd/es/form/Form";
-import React, { useCallback, useState } from "react";
+import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import { CustomTable } from "../check-list/ExamList";
-import { debounce } from "lodash";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 
-interface Class {
-  classRoomName?: string;
-  content: string;
-  teacherName: string;
-  imageLocation: string;
+interface Lesson {
+  lessonName: string;
+  topicName: string;
+  imageLocation?: string;
   videoLocation?: string;
 }
 
-const ClassList: React.FC = () => {
-  const user: User = useSelector((state: RootState) => state.admin);
+const LessonList: React.FC = () => {
+  const user = useSelector((state: RootState) => state.admin);
 
   const [form] = useForm();
-  const [lstClass, setLstClass] = useState<Class[]>([]);
-  const [filteredLstClass, setFilteredLstClass] = useState<Class[]>([]);
+  const [lstLessons, setLstLessons] = useState<Lesson[]>([]);
+  const [filteredLstLessons, setFilteredLstLessons] = useState<Lesson[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState("");
   const pageSize = 10;
-  const [modalCreate, setModalCreate] = useState<{
-    open: boolean;
-    file: string;
-    typeModal: string;
-  }>({
+  const [modalCreate, setModalCreate] = useState({
     open: false,
     file: "",
+    video: "",
     typeModal: "create",
   });
 
@@ -59,63 +42,80 @@ const ClassList: React.FC = () => {
     setCurrentPage(newPage);
   };
 
-  // Fetching the list of teachers
-
-  // API lấy danh sách lớp
-  const { isFetching, refetch } = useQuery({
-    queryKey: ["getListClass"],
+  const { data: allTopics, isFetching: isFetchingTopics } = useQuery({
+    queryKey: ["getAllTopics"],
     queryFn: async () => {
-      const res = await Learning.getListClass();
-      setLstClass(res.data);
-      setFilteredLstClass(res.data);
-      return res.data as Class[];
+      const res = await Learning.getAllTopics({});
+      return res.data.map((item: { content: string }) => ({
+        label: item.content,
+        value: item.content,
+      }));
     },
   });
 
-  // Thêm mới / chỉnh sửa lớp
+  const { isFetching, refetch } = useQuery({
+    queryKey: ["getListLessons"],
+    queryFn: async () => {
+      const res = await Learning.getListLessons();
+      setLstLessons(res.data);
+      setFilteredLstLessons(res.data);
+      return res.data as Lesson[];
+    },
+  });
+
   const mutationCreateUpdate = useMutation({
-    mutationFn: modalCreate.typeModal === "create" ? Learning.createClass : Learning.editClass,
+    mutationFn: modalCreate.typeModal === "create" ? Learning.createLesson : Learning.editLesson,
     onSuccess: (res, variables) => {
-      const updatedClass = {
+      const updatedLesson = {
         ...variables,
-        classRoomName: res.classRoomName,
+        lessonName: res.lessonName,
       };
 
-      setLstClass((prevLst) =>
+      setLstLessons((prevLst) =>
         modalCreate.typeModal === "create"
-          ? [...prevLst, updatedClass]
-          : prevLst.map((cls) => (cls.classRoomName === res.classRoomName ? updatedClass : cls))
+          ? [...prevLst, updatedLesson]
+          : prevLst.map((lesson) => (lesson.lessonName === res.lessonName ? updatedLesson : lesson))
       );
-      setFilteredLstClass((prevLst) =>
+      setFilteredLstLessons((prevLst) =>
         modalCreate.typeModal === "create"
-          ? [...prevLst, updatedClass]
-          : prevLst.map((cls) => (cls.classRoomName === res.classRoomName ? updatedClass : cls))
+          ? [...prevLst, updatedLesson]
+          : prevLst.map((lesson) => (lesson.lessonName === res.lessonName ? updatedLesson : lesson))
       );
 
       message.success(
-        `${modalCreate.typeModal === "create" ? "Thêm mới lớp học thành công" : "Cập nhật lớp học thành công"}`
+        `${modalCreate.typeModal === "create" ? "Tạo mới thành công" : "Cập nhật thành công"}`
       );
 
-      setModalCreate({ ...modalCreate, open: false, file: "" });
+      setModalCreate({ ...modalCreate, open: false, file: "", video: "" });
       form.resetFields();
     },
   });
 
-  // Xoá lớp
   const mutationDel = useMutation({
-    mutationFn: Learning.deleteClass,
+    mutationFn: Learning.deleteLesson,
     onSuccess: () => {
-      message.success("Xoá lớp học thành công");
+      message.success("Xoá bài học thành công");
       refetch();
     },
   });
 
-  // Upload file
   const uploadFileMutation = useMutation({
     mutationFn: UploadModel.uploadFile,
     onSuccess: async (res: any) => {
       form.setFieldValue("file", res);
       setModalCreate({ ...modalCreate, file: res });
+    },
+    onError: (error: Error) => {
+      console.error(error);
+      message.error("File đã được lưu trước đó");
+    },
+  });
+
+  const uploadVideoMutation = useMutation({
+    mutationFn: UploadModel.uploadFile,
+    onSuccess: async (res: any) => {
+      form.setFieldValue("video", res);
+      setModalCreate({ ...modalCreate, video: res });
     },
     onError: (error: Error) => {
       console.error(error);
@@ -132,46 +132,40 @@ const ClassList: React.FC = () => {
       width: 50,
     },
     {
-      title: "Tên lớp học",
-      dataIndex: "content",
-      key: "content",
+      title: "Tên bài học",
+      dataIndex: "lessonName",
+      key: "lessonName",
       render: (value: string) => <div className="text-lg">{value}</div>,
       width: 200,
     },
     {
-      title: "Tên giáo viên",
-      dataIndex: "teacherName",
-      key: "teacherName",
+      title: "Chủ đề",
+      dataIndex: "topicName",
+      key: "topicName",
       render: (value: string) => <div className="text-lg">{value}</div>,
       width: 300,
-    },
-    {
-      title: "Tên lớp",
-      dataIndex: "classRoomName",
-      key: "classRoomName",
-      render: (value: string) => <div className="text-lg">{value}</div>,
-      width: 200,
     },
     user?.role === "ADMIN"
       ? {
           title: "Hành động",
-          key: "classRoomName",
-          dataIndex: "classRoomName",
-          render: (value: any, record: Class) => (
+          key: "lessonName",
+          dataIndex: "lessonName",
+          render: (value: any, record: Lesson) => (
             <div className="flex space-x-2">
               <Button
                 icon={<EditOutlined />}
                 onClick={() => {
                   form.setFieldsValue({
-                    content: record.content,
-                    teacherName: record.teacherName,
+                    lessonName: record.lessonName,
+                    topicName: record.topicName,
                     file: record.imageLocation,
-                    classRoomName: record.classRoomName,
+                    video: record.videoLocation,
                   });
                   setModalCreate({
                     ...modalCreate,
                     open: true,
                     file: record.imageLocation,
+                    video: record.videoLocation,
                     typeModal: "edit",
                   });
                 }}
@@ -187,7 +181,7 @@ const ClassList: React.FC = () => {
       : null,
   ]?.filter((item) => item);
 
-  const props: UploadProps = {
+  const imageUploadProps: UploadProps = {
     name: "file",
     onChange(info) {
       if (info.file.status === "done") {
@@ -211,28 +205,52 @@ const ClassList: React.FC = () => {
     },
   };
 
+  const videoUploadProps: UploadProps = {
+    name: "video",
+    onChange(info) {
+      if (info.file.status === "done") {
+        message.success(`${info.file.name} file uploaded successfully`);
+      } else if (info.file.status === "error") {
+        message.error(`${info.file.name} file upload failed.`);
+      }
+    },
+    customRequest: ({ file }: { file: any }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      uploadVideoMutation.mutate(formData);
+    },
+    progress: {
+      strokeColor: {
+        "0%": "#108ee9",
+        "100%": "#87d068",
+      },
+      strokeWidth: 3,
+      format: (percent) => percent && `${parseFloat(percent.toFixed(2))}%`,
+    },
+  };
+
   const handleSearch = useCallback(
     debounce((searchText: string) => {
       if (searchText) {
-        setFilteredLstClass(
-          lstClass.filter((item: any) =>
-            (item?.content ?? "")
+        setFilteredLstLessons(
+          lstLessons.filter((item: any) =>
+            (item?.lessonName ?? "")
               .toLowerCase()
               .includes(searchText.toLowerCase()),
           ),
         );
       } else {
-        setFilteredLstClass(lstClass);
+        setFilteredLstLessons(lstLessons);
       }
     }, 300),
-    [lstClass],
+    [lstLessons],
   );
 
   const isLoading = isFetching || mutationCreateUpdate.isPending;
 
   return (
     <div className="w-full p-4">
-      <h1 className="mb-4 text-2xl font-bold">Danh sách lớp học</h1>
+      <h1 className="mb-4 text-2xl font-bold">Danh sách bài học</h1>
       <div className="mb-4 flex items-center justify-between">
         <InputPrimary
           allowClear
@@ -248,7 +266,7 @@ const ClassList: React.FC = () => {
           }}
           className="mb-4"
           style={{ width: 400 }}
-          placeholder="Tìm kiếm tên lớp học"
+          placeholder="Tìm kiếm tên bài học"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               handleSearch(e.currentTarget.value);
@@ -270,7 +288,7 @@ const ClassList: React.FC = () => {
       </div>
       <CustomTable
         columns={columns as any}
-        dataSource={filteredLstClass}
+        dataSource={filteredLstLessons}
         loading={isLoading}
         pagination={{
           pageSize: pageSize,
@@ -281,16 +299,15 @@ const ClassList: React.FC = () => {
         }}
       />
 
-      {/* Thêm lớp */}
       <BasicDrawer
         width={460}
         title={
           modalCreate.typeModal === "create"
-            ? "Thêm mới lớp học"
-            : "Chỉnh sửa lớp học"
+            ? "Thêm mới bài học"
+            : "Chỉnh sửa bài học"
         }
         onClose={() => {
-          setModalCreate({ ...modalCreate, open: false, file: "" });
+          setModalCreate({ ...modalCreate, open: false, file: "", video: "" });
           form.resetFields();
         }}
         open={modalCreate.open}
@@ -304,7 +321,7 @@ const ClassList: React.FC = () => {
             <Button
               className="hover:opacity-60 "
               onClick={() => {
-                setModalCreate({ ...modalCreate, open: false, file: "" });
+                setModalCreate({ ...modalCreate, open: false, file: "", video: "" });
                 form.resetFields();
               }}
               type="link"
@@ -321,42 +338,34 @@ const ClassList: React.FC = () => {
             layout="vertical"
             onFinish={(value) => {
               mutationCreateUpdate.mutate({
-                content: value.content,
-                teacherName: value.teacherName,
-                classRoomName: value.classRoomName,
+
+                lessonName: value.lessonName,
+                topicName: value.topicName,
                 imageLocation: value.file,
+                videoLocation: value.video,
               });
             }}
           >
             <Form.Item
-              name="classRoomName"
-              label="Tên lớp"
+              name="lessonName"
+              label="Tên bài học"
               className="mb-2"
               required
-              rules={[{ required: true, message: "Tên lớp không được bỏ trống" }]}
+              rules={[validateRequireInput("Tên bài học không được bỏ trống")]}
             >
-              <Input placeholder="Nhập tên lớp" />
+              <Input placeholder="Nhập tên bài học muốn thêm" />
             </Form.Item>
             <Form.Item
-              name="content"
-              label="Tên lớp học"
+              name="topicName"
+              label="Chủ đề"
               className="mb-2"
               required
-              rules={[validateRequireInput("Tên lớp học không được bỏ trống")]}
+              rules={[{ required: true, message: "Chủ đề không được bỏ trống" }]}
             >
-              <Input placeholder="Nhập tên lớp học muốn thêm" />
-            </Form.Item>
-            <Form.Item
-              name="teacherName"
-              label="Tên giáo viên"
-              className="mb-2"
-              required
-              rules={[validateRequireInput("Tên giáo viên không được bỏ trống")]}
-            >
-              <Input placeholder="Nhập tên giáo viên" />
+              <Select options={allTopics} placeholder="Lựa chọn chủ đề" />
             </Form.Item>
             <Form.Item name="file" label="Ảnh">
-              <Upload {...props} showUploadList={false}>
+              <Upload {...imageUploadProps} showUploadList={false}>
                 <Button icon={<UploadOutlined />}>Tải ảnh lên</Button>
               </Upload>
             </Form.Item>
@@ -370,6 +379,22 @@ const ClassList: React.FC = () => {
                 />
               ) : null}
             </div>
+            <Form.Item name="video" label="Video">
+              <Upload {...videoUploadProps} showUploadList={false}>
+                <Button icon={<UploadOutlined />}>Tải video lên</Button>
+              </Upload>
+            </Form.Item>
+            <div className="flex w-full items-center justify-center">
+              {modalCreate.video ? (
+                <video
+                  key={modalCreate.video}
+                  controls
+                  style={{ width: 300 }}
+                >
+                  <source src={modalCreate.video} type="video/mp4" />
+                </video>
+              ) : null}
+            </div>
           </Form>
         </div>
       </BasicDrawer>
@@ -377,4 +402,4 @@ const ClassList: React.FC = () => {
   );
 };
 
-export default ClassList;
+export default LessonList;
