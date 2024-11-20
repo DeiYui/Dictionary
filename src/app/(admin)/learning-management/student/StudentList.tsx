@@ -3,22 +3,18 @@ import { CloseIcon } from "@/assets/icons";
 import InputPrimary from "@/components/UI/Input/InputPrimary";
 import BasicDrawer from "@/components/UI/draw/BasicDraw";
 import Learning from "@/model/Learning";
-import UploadModel from "@/model/UploadModel";
 import { validateRequireInput } from "@/utils/validation/validtor";
 import {
   DeleteOutlined,
   EditOutlined,
   PlusOutlined,
-  UploadOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Button,
   Form,
-  Image,
   Input,
-  Upload,
-  UploadProps,
+  Select,
   message,
 } from "antd";
 import { useForm } from "antd/es/form/Form";
@@ -28,30 +24,25 @@ import { debounce } from "lodash";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
-interface Class {
-  classRoomName?: string;
-  content: string;
-  teacherName: string;
-  imageLocation: string;
-  videoLocation?: string;
+interface Student {
+  studentName: string;
+  classRoomName: string;
 }
 
-const ClassList: React.FC = () => {
+const StudentList: React.FC = () => {
   const user: User = useSelector((state: RootState) => state.admin);
 
   const [form] = useForm();
-  const [lstClass, setLstClass] = useState<Class[]>([]);
-  const [filteredLstClass, setFilteredLstClass] = useState<Class[]>([]);
+  const [lstStudents, setLstStudents] = useState<Student[]>([]);
+  const [filteredLstStudents, setFilteredLstStudents] = useState<Student[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState("");
   const pageSize = 10;
   const [modalCreate, setModalCreate] = useState<{
     open: boolean;
-    file: string;
     typeModal: string;
   }>({
     open: false,
-    file: "",
     typeModal: "create",
   });
 
@@ -59,67 +50,64 @@ const ClassList: React.FC = () => {
     setCurrentPage(newPage);
   };
 
-  // Fetching the list of teachers
-
-  // API lấy danh sách lớp
-  const { isFetching, refetch } = useQuery({
+  // Fetching the list of classes
+  const { data: allClasses, isFetching: isFetchingClasses } = useQuery({
     queryKey: ["getListClass"],
     queryFn: async () => {
       const res = await Learning.getListClass();
-      setLstClass(res.data);
-      setFilteredLstClass(res.data);
-      return res.data as Class[];
+      return res.data.map((item: { classRoomName: string }) => ({
+        label: item.classRoomName,
+        value: item.classRoomName,
+      }));
     },
   });
 
-  // Thêm mới / chỉnh sửa lớp
+  // Fetching the list of students
+  const { isFetching, refetch } = useQuery({
+    queryKey: ["getListStudents"],
+    queryFn: async () => {
+      const res = await Learning.getListStudents();
+      setLstStudents(res.data);
+      setFilteredLstStudents(res.data);
+      return res.data as Student[];
+    },
+  });
+
+  // Adding or editing a student
   const mutationCreateUpdate = useMutation({
-    mutationFn: modalCreate.typeModal === "create" ? Learning.createClass : Learning.editClass,
+    mutationFn: modalCreate.typeModal === "create" ? Learning.createStudent : Learning.editStudent,
     onSuccess: (res, variables) => {
-      const updatedClass = {
+      const updatedStudent = {
         ...variables,
-        classRoomName: res.classRoomName,
+        studentName: res.studentName,
       };
 
-      setLstClass((prevLst) =>
+      setLstStudents((prevLst) =>
         modalCreate.typeModal === "create"
-          ? [...prevLst, updatedClass]
-          : prevLst.map((cls) => (cls.classRoomName === res.classRoomName ? updatedClass : cls))
+          ? [...prevLst, updatedStudent]
+          : prevLst.map((student) => (student.studentName === res.studentName ? updatedStudent : student))
       );
-      setFilteredLstClass((prevLst) =>
+      setFilteredLstStudents((prevLst) =>
         modalCreate.typeModal === "create"
-          ? [...prevLst, updatedClass]
-          : prevLst.map((cls) => (cls.classRoomName === res.classRoomName ? updatedClass : cls))
+          ? [...prevLst, updatedStudent]
+          : prevLst.map((student) => (student.studentName === res.studentName ? updatedStudent : student))
       );
 
       message.success(
-        `${modalCreate.typeModal === "create" ? "Thêm mới lớp học thành công" : "Cập nhật lớp học thành công"}`
+        `${modalCreate.typeModal === "create" ? "Thêm mới học sinh thành công" : "Cập nhật học sinh thành công"}`
       );
 
-      setModalCreate({ ...modalCreate, open: false, file: "" });
+      setModalCreate({ ...modalCreate, open: false });
       form.resetFields();
     },
   });
 
-  // Xoá lớp
+  // Deleting a student
   const mutationDel = useMutation({
-    mutationFn: Learning.deleteClass,
+    mutationFn: Learning.deleteStudent,
     onSuccess: () => {
-      message.success("Xoá lớp học thành công");
+      message.success("Xoá học sinh thành công");
       refetch();
-    },
-  });
-
-  // Upload file
-  const uploadFileMutation = useMutation({
-    mutationFn: UploadModel.uploadFile,
-    onSuccess: async (res: any) => {
-      form.setFieldValue("file", res);
-      setModalCreate({ ...modalCreate, file: res });
-    },
-    onError: (error: Error) => {
-      console.error(error);
-      message.error("File đã được lưu trước đó");
     },
   });
 
@@ -132,21 +120,14 @@ const ClassList: React.FC = () => {
       width: 50,
     },
     {
-      title: "Tên lớp học",
-      dataIndex: "content",
-      key: "content",
+      title: "Tên học sinh",
+      dataIndex: "studentName",
+      key: "studentName",
       render: (value: string) => <div className="text-lg">{value}</div>,
       width: 200,
     },
     {
-      title: "Tên giáo viên",
-      dataIndex: "teacherName",
-      key: "teacherName",
-      render: (value: string) => <div className="text-lg">{value}</div>,
-      width: 300,
-    },
-    {
-      title: "Tên lớp",
+      title: "Lớp",
       dataIndex: "classRoomName",
       key: "classRoomName",
       render: (value: string) => <div className="text-lg">{value}</div>,
@@ -155,23 +136,20 @@ const ClassList: React.FC = () => {
     user?.role === "ADMIN"
       ? {
           title: "Hành động",
-          key: "classRoomName",
-          dataIndex: "classRoomName",
-          render: (value: any, record: Class) => (
+          key: "studentName",
+          dataIndex: "studentName",
+          render: (value: any, record: Student) => (
             <div className="flex space-x-2">
               <Button
                 icon={<EditOutlined />}
                 onClick={() => {
                   form.setFieldsValue({
-                    content: record.content,
-                    teacherName: record.teacherName,
-                    file: record.imageLocation,
+                    studentName: record.studentName,
                     classRoomName: record.classRoomName,
                   });
                   setModalCreate({
                     ...modalCreate,
                     open: true,
-                    file: record.imageLocation,
                     typeModal: "edit",
                   });
                 }}
@@ -187,52 +165,28 @@ const ClassList: React.FC = () => {
       : null,
   ]?.filter((item) => item);
 
-  const props: UploadProps = {
-    name: "file",
-    onChange(info) {
-      if (info.file.status === "done") {
-        message.success(`${info.file.name} file uploaded successfully`);
-      } else if (info.file.status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-    customRequest: ({ file }: { file: any }) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      uploadFileMutation.mutate(formData);
-    },
-    progress: {
-      strokeColor: {
-        "0%": "#108ee9",
-        "100%": "#87d068",
-      },
-      strokeWidth: 3,
-      format: (percent) => percent && `${parseFloat(percent.toFixed(2))}%`,
-    },
-  };
-
   const handleSearch = useCallback(
     debounce((searchText: string) => {
       if (searchText) {
-        setFilteredLstClass(
-          lstClass.filter((item: any) =>
-            (item?.content ?? "")
+        setFilteredLstStudents(
+          lstStudents.filter((item: any) =>
+            (item?.studentName ?? "")
               .toLowerCase()
               .includes(searchText.toLowerCase()),
           ),
         );
       } else {
-        setFilteredLstClass(lstClass);
+        setFilteredLstStudents(lstStudents);
       }
     }, 300),
-    [lstClass],
+    [lstStudents],
   );
 
   const isLoading = isFetching || mutationCreateUpdate.isPending;
 
   return (
     <div className="w-full p-4">
-      <h1 className="mb-4 text-2xl font-bold">Danh sách lớp học</h1>
+      <h1 className="mb-4 text-2xl font-bold">Danh sách học sinh</h1>
       <div className="mb-4 flex items-center justify-between">
         <InputPrimary
           allowClear
@@ -248,7 +202,7 @@ const ClassList: React.FC = () => {
           }}
           className="mb-4"
           style={{ width: 400 }}
-          placeholder="Tìm kiếm tên lớp học"
+          placeholder="Tìm kiếm tên học sinh"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               handleSearch(e.currentTarget.value);
@@ -270,7 +224,7 @@ const ClassList: React.FC = () => {
       </div>
       <CustomTable
         columns={columns as any}
-        dataSource={filteredLstClass}
+        dataSource={filteredLstStudents}
         loading={isLoading}
         pagination={{
           pageSize: pageSize,
@@ -281,16 +235,16 @@ const ClassList: React.FC = () => {
         }}
       />
 
-      {/* Thêm lớp */}
+      {/* Thêm học sinh */}
       <BasicDrawer
         width={460}
         title={
           modalCreate.typeModal === "create"
-            ? "Thêm mới lớp học"
-            : "Chỉnh sửa lớp học"
+            ? "Thêm mới học sinh"
+            : "Chỉnh sửa học sinh"
         }
         onClose={() => {
-          setModalCreate({ ...modalCreate, open: false, file: "" });
+          setModalCreate({ ...modalCreate, open: false });
           form.resetFields();
         }}
         open={modalCreate.open}
@@ -304,7 +258,7 @@ const ClassList: React.FC = () => {
             <Button
               className="hover:opacity-60 "
               onClick={() => {
-                setModalCreate({ ...modalCreate, open: false, file: "" });
+                setModalCreate({ ...modalCreate, open: false });
                 form.resetFields();
               }}
               type="link"
@@ -321,55 +275,29 @@ const ClassList: React.FC = () => {
             layout="vertical"
             onFinish={(value) => {
               mutationCreateUpdate.mutate({
-                content: value.content,
-                teacherName: value.teacherName,
+                studentName: value.studentName,
                 classRoomName: value.classRoomName,
-                imageLocation: value.file,
               });
             }}
           >
             <Form.Item
+              name="studentName"
+              label="Tên học sinh"
+              className="mb-2"
+              required
+              rules={[validateRequireInput("Tên học sinh không được bỏ trống")]}
+            >
+              <Input placeholder="Nhập tên học sinh" />
+            </Form.Item>
+            <Form.Item
               name="classRoomName"
-              label="Tên lớp"
+              label="Lớp"
               className="mb-2"
               required
-              rules={[{ required: true, message: "Tên lớp không được bỏ trống" }]}
+              rules={[{ required: true, message: "Lớp không được bỏ trống" }]}
             >
-              <Input placeholder="Nhập tên lớp" />
+              <Select options={allClasses} placeholder="Lựa chọn lớp" />
             </Form.Item>
-            <Form.Item
-              name="content"
-              label="Tên lớp học"
-              className="mb-2"
-              required
-              rules={[validateRequireInput("Tên lớp học không được bỏ trống")]}
-            >
-              <Input placeholder="Nhập tên lớp học muốn thêm" />
-            </Form.Item>
-            <Form.Item
-              name="teacherName"
-              label="Tên giáo viên"
-              className="mb-2"
-              required
-              rules={[validateRequireInput("Tên giáo viên không được bỏ trống")]}
-            >
-              <Input placeholder="Nhập tên giáo viên" />
-            </Form.Item>
-            <Form.Item name="file" label="Ảnh">
-              <Upload {...props} showUploadList={false}>
-                <Button icon={<UploadOutlined />}>Tải ảnh lên</Button>
-              </Upload>
-            </Form.Item>
-            <div className="flex w-full items-center justify-center">
-              {modalCreate.file ? (
-                <Image
-                  className=""
-                  src={modalCreate.file}
-                  alt="Ảnh chủ đề"
-                  style={{ width: 300 }}
-                />
-              ) : null}
-            </div>
           </Form>
         </div>
       </BasicDrawer>
@@ -377,4 +305,4 @@ const ClassList: React.FC = () => {
   );
 };
 
-export default ClassList;
+export default StudentList;
