@@ -13,6 +13,7 @@ import {
 } from "@ant-design/icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
+  Select,
   Button,
   Form,
   Image,
@@ -34,10 +35,12 @@ interface Class {
   teacherName: string;
   imageLocation: string;
   videoLocation?: string;
+  grade: string;
+  classCode: string;
 }
 
 const ClassList: React.FC = () => {
-  const user: User = useSelector((state: RootState) => state.admin);
+  const user = useSelector((state: RootState) => state.admin);
 
   const [form] = useForm();
   const [lstClass, setLstClass] = useState<Class[]>([]);
@@ -132,11 +135,25 @@ const ClassList: React.FC = () => {
       width: 50,
     },
     {
+      title: "Tên khối",
+      dataIndex: "grade",
+      key: "grade",
+      render: (value: string) => <div className="text-lg">{value}</div>,
+      width: 100,
+    },
+    {
       title: "Tên lớp học",
       dataIndex: "content",
       key: "content",
       render: (value: string) => <div className="text-lg">{value}</div>,
       width: 200,
+    },
+    {
+      title: "Mã lớp",
+      dataIndex: "classCode",
+      key: "classCode",
+      render: (value: string) => <div className="text-lg">{value}</div>,
+      width: 100,
     },
     {
       title: "Tên giáo viên",
@@ -145,47 +162,40 @@ const ClassList: React.FC = () => {
       render: (value: string) => <div className="text-lg">{value}</div>,
       width: 300,
     },
-    {
-      title: "Tên lớp",
+    (user?.role === "ADMIN" || user?.role === "TEACHER") && {
+      title: "Hành động",
+      key: "actions",
       dataIndex: "classRoomName",
-      key: "classRoomName",
-      render: (value: string) => <div className="text-lg">{value}</div>,
-      width: 200,
+      render: (value: any, record: Class) => (
+        <div className="flex space-x-2">
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => {
+              form.setFieldsValue({
+                content: record.content,
+                teacherName: record.teacherName,
+                file: record.imageLocation,
+                classRoomName: record.classRoomName,
+                grade: record.grade,
+                classCode: record.classCode,
+              });
+              setModalCreate({
+                ...modalCreate,
+                open: true,
+                file: record.imageLocation,
+                typeModal: "edit",
+              });
+            }}
+          />
+          <Button
+            icon={<DeleteOutlined />}
+            danger
+            onClick={() => mutationDel.mutate(value)}
+          />
+        </div>
+      ),
     },
-    user?.role === "ADMIN"
-      ? {
-          title: "Hành động",
-          key: "classRoomName",
-          dataIndex: "classRoomName",
-          render: (value: any, record: Class) => (
-            <div className="flex space-x-2">
-              <Button
-                icon={<EditOutlined />}
-                onClick={() => {
-                  form.setFieldsValue({
-                    content: record.content,
-                    teacherName: record.teacherName,
-                    file: record.imageLocation,
-                    classRoomName: record.classRoomName,
-                  });
-                  setModalCreate({
-                    ...modalCreate,
-                    open: true,
-                    file: record.imageLocation,
-                    typeModal: "edit",
-                  });
-                }}
-              />
-              <Button
-                icon={<DeleteOutlined />}
-                danger
-                onClick={() => mutationDel.mutate(value)}
-              />
-            </div>
-          ),
-        }
-      : null,
-  ]?.filter((item) => item);
+  ].filter(Boolean);
 
   const props: UploadProps = {
     name: "file",
@@ -218,14 +228,14 @@ const ClassList: React.FC = () => {
           lstClass.filter((item: any) =>
             (item?.content ?? "")
               .toLowerCase()
-              .includes(searchText.toLowerCase()),
-          ),
+              .includes(searchText.toLowerCase())
+          )
         );
       } else {
         setFilteredLstClass(lstClass);
       }
     }, 300),
-    [lstClass],
+    [lstClass]
   );
 
   const isLoading = isFetching || mutationCreateUpdate.isPending;
@@ -325,18 +335,29 @@ const ClassList: React.FC = () => {
                 teacherName: value.teacherName,
                 classRoomName: value.classRoomName,
                 imageLocation: value.file,
+                grade: value.grade,
+                classCode: value.classCode,
               });
             }}
           >
-            <Form.Item
-              name="classRoomName"
-              label="Tên lớp"
-              className="mb-2"
-              required
-              rules={[{ required: true, message: "Tên lớp không được bỏ trống" }]}
-            >
-              <Input placeholder="Nhập tên lớp" />
-            </Form.Item>
+            {(user?.role === "ADMIN" || user?.role === "TEACHER") && (
+              <Form.Item
+                name="grade"
+                label="Tên khối"
+                className="mb-2"
+                required
+                rules={[{ required: true, message: "Tên khối không được bỏ trống" }]}
+              >
+                <Select placeholder="Chọn khối">
+                  <Select.Option value="Lớp 1">Lớp 1</Select.Option>
+                  <Select.Option value="Lớp 2">Lớp 2</Select.Option>
+                  <Select.Option value="Lớp 3">Lớp 3</Select.Option>
+                  <Select.Option value="Lớp 4">Lớp 4</Select.Option>
+                  <Select.Option value="Lớp 5">Lớp 5</Select.Option>
+                </Select>
+              </Form.Item>
+            )}
+
             <Form.Item
               name="content"
               label="Tên lớp học"
@@ -347,14 +368,25 @@ const ClassList: React.FC = () => {
               <Input placeholder="Nhập tên lớp học muốn thêm" />
             </Form.Item>
             <Form.Item
-              name="teacherName"
-              label="Tên giáo viên"
+              name="classCode"
+              label="Mã lớp"
               className="mb-2"
               required
-              rules={[validateRequireInput("Tên giáo viên không được bỏ trống")]}
+              rules={[{ required: true, message: "Mã lớp không được bỏ trống" }]}
             >
-              <Input placeholder="Nhập tên giáo viên" />
+              <Input type="number" placeholder="Nhập mã lớp" />
             </Form.Item>
+            {user?.role === "ADMIN" && (
+              <Form.Item
+                name="teacherName"
+                label="Tên giáo viên"
+                className="mb-2"
+                required
+                rules={[validateRequireInput("Tên giáo viên không được bỏ trống")]}
+              >
+                <Input placeholder="Nhập tên giáo viên" />
+              </Form.Item>
+            )}
             <Form.Item name="file" label="Ảnh">
               <Upload {...props} showUploadList={false}>
                 <Button icon={<UploadOutlined />}>Tải ảnh lên</Button>
