@@ -275,7 +275,7 @@ const LessonList: React.FC = () => {
         />
 
         <Button
-          hidden={!(user?.role === "ADMIN" || user?.role === "TEACHER")}
+          hidden={!(user?.role === "ADMIN")}
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
