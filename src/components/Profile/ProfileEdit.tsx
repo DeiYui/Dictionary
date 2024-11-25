@@ -93,16 +93,19 @@ const ProfileEdit = () => {
         <Form
           form={form}
           onFinish={async (value) => {
-            const newValue = {
-              ...value,
-              birthDay: dayjs(value.birthDay).format("YYYY-MM-DD"),
-            };
-            const res = await User.updateProfile(newValue);
-            if (res.code === 200) {
+            try {
+              const newValue = {
+                ...value,
+                birthDay: dayjs(value.birthDay).format("YYYY-MM-DD"),
+              };
+              await User.updateProfile(newValue);
               message.success("Cập nhật thành công");
               const response = await User.getProfile();
-              dispatch(login(response.data));
+              dispatch(login(response));
               router.push("/profile");
+            } catch (error: any) {
+              console.log("error", error);
+              message.error(error?.data?.message);
             }
           }}
           layout="vertical"
@@ -115,14 +118,12 @@ const ProfileEdit = () => {
                 value={user.avatarLocation}
                 listType="picture-circle"
                 onChange={async (value) => {
-                  const res = await User.updateAvatar({
+                  const res = await User.updateProfile({
                     avatarLocation: value,
                   });
-                  if (res.code === 200) {
-                    const response = await User.getProfile();
-                    dispatch(login(response.data));
-                    message.success("Cập nhật avatar thành công");
-                  }
+                  const response = await User.getProfile();
+                  dispatch(login(response));
+                  message.success("Cập nhật avatar thành công");
                 }}
               />
             </div>

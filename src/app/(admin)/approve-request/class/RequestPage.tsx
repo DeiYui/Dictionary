@@ -1,5 +1,6 @@
 "use client";
 import { usePage } from "@/hooks/usePage";
+import Learning from "@/model/Learning";
 import User from "@/model/User";
 import { UserOutlined } from "@ant-design/icons";
 import { useMutation } from "@tanstack/react-query";
@@ -8,19 +9,17 @@ import React from "react";
 
 const RequestPage: React.FC = () => {
   // API lấy danh sách yêu cầu
-  // API lấy danh sách  bài kiểm tra
   const { page, pageSize, content, isFetching, pagination, refetch } = usePage(
-    ["getAllAccount"],
-    User.getAllAccount,
+    ["getAllClassPending"],
+    Learning.getListClass,
     {
       status: "PENDING",
-      roleCode: "TEACHER",
     },
   );
 
   // Chấp nhận
   const mutationApprove = useMutation({
-    mutationFn: User.approveAccount,
+    mutationFn: Learning.editClass,
     onSuccess: () => {
       message.success("Xác nhận thành công");
       refetch();
@@ -36,7 +35,7 @@ const RequestPage: React.FC = () => {
       width: 80,
     },
     {
-      title: "Tên người dùng",
+      title: "Tên lớp học",
       dataIndex: "name",
       key: "name",
       width: "30%",
@@ -48,27 +47,18 @@ const RequestPage: React.FC = () => {
       ),
     },
     {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
+      title: "Tên lớp",
+      dataIndex: "classLevel",
+      key: "classLevel",
       width: "20%",
     },
     {
-      title: "Số điện thoại",
-      dataIndex: "phoneNumber",
+      title: "Tên giáo viên",
+      dataIndex: "teacher",
+      key: "teacher",
+      render: (value: any) => <div className="text-base">{value?.name}</div>,
       width: "20%",
     },
-    {
-      title: "Địa chỉ",
-      dataIndex: "address",
-      width: "20%",
-    },
-    {
-      title: "Giới tính",
-      dataIndex: "gender",
-      width: "10%",
-    },
-
     {
       title: "Phê duyệt",
       dataIndex: "id",
@@ -76,7 +66,15 @@ const RequestPage: React.FC = () => {
       width: "20%",
       render: (value: number) => (
         <>
-          <Button key={value} onClick={() => mutationApprove.mutate(value)}>
+          <Button
+            key={value}
+            onClick={() =>
+              mutationApprove.mutate({
+                id: value,
+                status: "APPROVED",
+              })
+            }
+          >
             Xác nhận
           </Button>
         </>
